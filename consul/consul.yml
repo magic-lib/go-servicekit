@@ -1,0 +1,64 @@
+version: '3.9'
+
+
+services:
+  consul-1:
+    image: hashicorp/consul:1.21.2
+    container_name: consul-${DOCKER_COMPOSE_PROJECT}-1
+    command: "agent -server -ui -node=consul-1 -bootstrap-expect=3 -client=0.0.0.0 -datacenter=dc1 -retry-join=consul-1 -retry-join=consul-2 -retry-join=consul-3"
+    ports:
+      - "${CONSUL_HTTP_PORT}:8500"  # HTTP UI
+      - "${CONSUL_DNS_PORT}:8600"  # DNS
+    expose:
+      - "8500"
+      - "8600"
+    volumes:
+      - ${TIME_ZONE}:/etc/localtime
+      - ${DOCKER_COMPOSE_BASE_DIR}/dev/config/consul/consul.hcl:/consul/config/consul.hcl
+      - ${DOCKER_BASE_DIR}/consul/server-1/config:/consul/config
+      - ${DOCKER_BASE_DIR}/consul/server-1/data:/consul/data
+    networks:
+      default:
+        aliases:
+          - consul-server
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8500/v1/status/leader || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  consul-2:
+    image: hashicorp/consul:1.21.2
+    container_name: consul-${DOCKER_COMPOSE_PROJECT}-2
+    command: "agent -server -node=consul-2 -bootstrap-expect=3 -client=0.0.0.0 -datacenter=dc1 -retry-join=consul-1 -retry-join=consul-2 -retry-join=consul-3"
+    volumes:
+      - ${TIME_ZONE}:/etc/localtime
+      - ${DOCKER_COMPOSE_BASE_DIR}/dev/config/consul/consul.hcl:/consul/config/consul.hcl
+      - ${DOCKER_BASE_DIR}/consul/server-2/config:/consul/config
+      - ${DOCKER_BASE_DIR}/consul/server-2/data:/consul/data
+    networks:
+      default:
+        aliases:
+          - consul-server
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8500/v1/status/leader || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  consul-3:
+    image: hashicorp/consul:1.21.2
+    container_name: consul-${DOCKER_COMPOSE_PROJECT}-3
+    command: "agent -server -node=consul-3 -bootstrap-expect=3 -client=0.0.0.0 -datacenter=dc1 -retry-join=consul-1 -retry-join=consul-2 -retry-join=consul-3"
+    volumes:
+      - ${TIME_ZONE}:/etc/localtime
+      - ${DOCKER_COMPOSE_BASE_DIR}/dev/config/consul/consul.hcl:/consul/config/consul.hcl
+      - ${DOCKER_BASE_DIR}/consul/server-3/config:/consul/config
+      - ${DOCKER_BASE_DIR}/consul/server-3/data:/consul/data
+    networks:
+      default:
+        aliases:
+          - consul-server
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8500/v1/status/leader || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
