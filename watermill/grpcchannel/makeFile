@@ -1,0 +1,6 @@
+
+gen-service:
+	@protoc \
+       --go_out=./pubsub \
+       --go-grpc_out=./pubsub \
+       ./proto/pubsub.proto

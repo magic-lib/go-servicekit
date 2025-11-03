@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package pubsub;
+
+option go_package = "./;pubsub";
+
+// Message 消息结构
+message Message {
+  string namespace = 1;
+  string topic = 2;
+  string message_id = 3;
+  string message_content = 4;
+}
+
+// SubscribeRequest 订阅请求：客户端指定要订阅的 Topic
+message SubscribeRequest {
+  string namespace = 1;
+  string topic = 2;
+}
+
+// 订阅响应：服务端向客户端推送的消息
+message SubscribeResponse {
+  Message message = 1;
+}
+
+// Pub/Sub 服务接口
+service PubSubService {
+  // 双向流式 RPC：客户端发送订阅请求，服务端持续推送消息
+  rpc Subscribe (stream SubscribeRequest) returns (stream SubscribeResponse);
+
+  // 发布消息接口
+  rpc Publish (Message) returns (Empty);
+}
+
+// 空响应
+message Empty {}
