@@ -1,6 +1,7 @@
 package rabbitmq_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/magic-lib/go-plat-utils/conn"
 	"github.com/magic-lib/go-servicekit/rabbitmq"
@@ -20,7 +21,7 @@ func TestRabbitMQClient(t *testing.T) {
 	}
 	err = client.StartConsumer(&rabbitmq.ConsumerOptions{
 		QueueName: "test123",
-		Handler: func(id string, message string) error {
+		Handler: func(ctx context.Context, id string, message string) error {
 			fmt.Println(id + ":" + message)
 			return nil
 		},
@@ -31,11 +32,13 @@ func TestRabbitMQClient(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	id, err := client.ProduceMessage(&rabbitmq.ProducerOptions{
+	ctx := context.Background()
+
+	id, err := client.ProduceMessage(ctx, &rabbitmq.ProducerOption{
 		QueueName: "test123",
 		Content:   "hello world444",
 	})
-	id, err = client.ProduceMessage(&rabbitmq.ProducerOptions{
+	id, err = client.ProduceMessage(ctx, &rabbitmq.ProducerOption{
 		QueueName: "test123",
 		Content:   "hello world333",
 	})

@@ -1,0 +1,3 @@
+Update(ctx context.Context, data *{{.upperStartCamelObject}}, session ...sqlx.Session) error
+UpdatePartial(ctx context.Context, data *{{.upperStartCamelObject}}, columns []string, whereCondition sqlstatement.LogicCondition, session ...sqlx.Session) error
+UpdatePartialByFunc(ctx context.Context, {{.lowerStartCamelPrimaryKey}} {{.dataType}}, updateFunc func(data *{{.upperStartCamelObject}}) error, session ...sqlx.Session) error

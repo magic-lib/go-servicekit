@@ -1,0 +1,5 @@
+FindOne(ctx context.Context, {{.lowerStartCamelPrimaryKey}} {{.dataType}}) (*{{.upperStartCamelObject}}, error)
+Find{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition) (*{{.upperStartCamelObject}}, error)
+List{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition) ([]*{{.upperStartCamelObject}}, error)
+List{{.upperStartCamelObject}}ByPage(ctx context.Context, whereCond sqlstatement.LogicCondition, pageModel *httputil.PageModel, maxLimit int, orderBy string) ([]*{{.upperStartCamelObject}}, int64, error)
+Count{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition) (int64, error)

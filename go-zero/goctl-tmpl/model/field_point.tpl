@@ -1,0 +1,1 @@
+{{.name}} bool {{.tag}} {{if .hasComment}}// {{.comment}}{{end}}

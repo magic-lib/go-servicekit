@@ -1,0 +1,20 @@
+services:
+  # Jaeger 服务，用于分布式追踪
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686" # Jaeger UI 端口
+      - "14268:14268" # OTLP HTTP Collector 端口
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true # 启用 OTLP 收集器
+    volumes:
+      - /var/lib/jaeger:/var/lib/jaeger
+
+#  auth-svc:
+#    environment:
+#      - TRACING_ENDPOINT=http://jaeger:14268/api/traces
+#    depends_on:
+#      - jaeger
+
+#docker run -d --name jaeger -p 16686:16686 -p 14268:14268 -e COLLECTOR_OTLP_ENABLED=true -v /data/project/jaeger:/var/lib/jaeger jaegertracing/all-in-one:latest

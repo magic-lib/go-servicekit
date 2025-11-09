@@ -1,0 +1,69 @@
+version: '3.9'
+
+
+services:
+  rabbitmq1:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq1
+    restart: always
+    environment:
+      # 配置默认用户和密码（生产环境建议修改）
+      RABBITMQ_DEFAULT_USER: "root"
+      RABBITMQ_DEFAULT_PASS: "mjhttyryt565-jyjh5824t-p55w"
+      RABBITMQ_DEFAULT_VHOST: /  # 默认虚拟主机
+      # 高级配置：开启镜像队列（集群模式下数据同步）
+      RABBITMQ_ERLANG_COOKIE: "rabbitmq_cookie"  # 集群通信Cookie，所有节点需一致
+      RABBITMQ_NODE_NAME: rabbit@rabbitmq1
+      RABBITMQ_CLUSTER_NODES: rabbit@rabbitmq2
+    ports:
+      - "15670:5672" # AMQP协议端口（应用程序连接）
+      - "15672:15672" # 管理界面端口（Web访问）
+    expose:
+      - "5672" # AMQP协议端口（应用程序连接）
+      - "15672" # 管理界面端口（Web访问）
+      - "5671" # AMQPS协议端口（加密连接，可选）
+      - "15671" # 管理界面HTTPS端口（可选）
+    volumes:
+      # 持久化数据目录（避免容器重启后数据丢失）
+      - ./rabbitmq1/data:/var/lib/rabbitmq
+      # 自定义配置文件（可选，如需高级配置）
+      # - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      # 插件配置（可选）
+      # - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+    # 健康检查（确保服务正常启动）
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  rabbitmq2:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq2
+    restart: always
+    environment:
+      # 配置默认用户和密码（生产环境建议修改）
+      RABBITMQ_DEFAULT_USER: "root"
+      RABBITMQ_DEFAULT_PASS: "mjhttyryt565-jyjh5824t-p55w"
+      RABBITMQ_DEFAULT_VHOST: /  # 默认虚拟主机
+      # 高级配置：开启镜像队列（集群模式下数据同步）
+      RABBITMQ_ERLANG_COOKIE: "rabbitmq_cookie"  # 集群通信Cookie，所有节点需一致
+      RABBITMQ_NODE_NAME: rabbit@rabbitmq2 #节点名称@主机名
+      RABBITMQ_CLUSTER_NODES: rabbit@rabbitmq1
+    expose:
+      - "5672" # AMQP协议端口（应用程序连接）
+      - "15672" # 管理界面端口（Web访问）
+      - "5671" # AMQPS协议端口（加密连接，可选）
+      - "15671" # 管理界面HTTPS端口（可选）
+    volumes:
+      # 持久化数据目录（避免容器重启后数据丢失）
+      - ./rabbitmq2/data:/var/lib/rabbitmq
+      # 自定义配置文件（可选，如需高级配置）
+      # - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      # 插件配置（可选）
+      # - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+    # 健康检查（确保服务正常启动）
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5

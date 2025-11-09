@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+// 格式为 "导入路径;包名"
+option go_package = "./example;example";
+
+package example;
+
+service ExampleService {
+  rpc SayHello(HelloRequest) returns (HelloResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string message = 1;
+}
+
+//protoc -I=. --go_out=./ --go-grpc_out=./ ./example.proto
