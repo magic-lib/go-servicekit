@@ -16,6 +16,7 @@ message Message {
 message SubscribeRequest {
   string namespace = 1;
   string topic = 2;
+  string consumer_group = 3;
 }
 
 // 订阅响应：服务端向客户端推送的消息

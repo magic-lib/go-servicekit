@@ -95,6 +95,7 @@ type SubscribeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	Topic         string                 `protobuf:"bytes,2,opt,name=topic,proto3" json:"topic,omitempty"`
+	ConsumerGroup string                 `protobuf:"bytes,3,opt,name=consumer_group,json=consumerGroup,proto3" json:"consumer_group,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -139,6 +140,13 @@ func (x *SubscribeRequest) GetNamespace() string {
 func (x *SubscribeRequest) GetTopic() string {
 	if x != nil {
 		return x.Topic
+	}
+	return ""
+}
+
+func (x *SubscribeRequest) GetConsumerGroup() string {
+	if x != nil {
+		return x.ConsumerGroup
 	}
 	return ""
 }
@@ -235,10 +243,11 @@ const file_proto_pubsub_proto_rawDesc = "" +
 	"\x05topic\x18\x02 \x01(\tR\x05topic\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x03 \x01(\tR\tmessageId\x12'\n" +
-	"\x0fmessage_content\x18\x04 \x01(\tR\x0emessageContent\"F\n" +
+	"\x0fmessage_content\x18\x04 \x01(\tR\x0emessageContent\"m\n" +
 	"\x10SubscribeRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x14\n" +
-	"\x05topic\x18\x02 \x01(\tR\x05topic\">\n" +
+	"\x05topic\x18\x02 \x01(\tR\x05topic\x12%\n" +
+	"\x0econsumer_group\x18\x03 \x01(\tR\rconsumerGroup\">\n" +
 	"\x11SubscribeResponse\x12)\n" +
 	"\amessage\x18\x01 \x01(\v2\x0f.pubsub.MessageR\amessage\"\a\n" +
 	"\x05Empty2\x80\x01\n" +
