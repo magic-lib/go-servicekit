@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	goOauth2 "github.com/go-oauth2/oauth2/v4"
+	"github.com/go-oauth2/oauth2/v4/generates"
 	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/go-oauth2/oauth2/v4/store"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/magic-lib/go-plat-utils/utils/httputil/param"
 	"github.com/magic-lib/go-servicekit/oauth2"
 	"log"
@@ -25,10 +27,10 @@ func TestClientCredentials(t *testing.T) {
 
 	cTemp, err := oauth2.NewClientCredentials(&oauth2.ClientCredentials{
 		ClientStorage: clientStore,
-		//JWTAccessGenerate: &generates.JWTAccessGenerate{
-		//	SignedKey:    []byte("secret"),
-		//	SignedMethod: jwt.SigningMethodHS256,
-		//},
+		JWTAccessGenerate: &generates.JWTAccessGenerate{
+			SignedKey:    []byte("secret"),
+			SignedMethod: jwt.SigningMethodHS256,
+		},
 		ClientScopeHandler: func(tgr *goOauth2.TokenGenerateRequest) (allowed bool, err error) {
 			allowed = true
 			return
@@ -46,18 +48,11 @@ func TestClientCredentials(t *testing.T) {
 		headers := param.NewParam().GetAllHeaders(r)
 		tokenStr := headers.Get("Authorization")
 
-		tokenInfo, err := cTemp.CheckTokenInfo(r.Context(), tokenStr)
+		clientInfo, err := cTemp.GetClientInfo(r.Context(), tokenStr)
 		if err != nil {
 			_ = json.NewEncoder(writer).Encode(err.Error())
 			return
 		}
-
-		clientInfo, err := clientStore.GetByID(r.Context(), tokenInfo.GetClientID())
-		if err != nil {
-			_ = json.NewEncoder(writer).Encode(err.Error())
-			return
-		}
-
 		//根据userId再去从数据库查询用户信息
 		fmt.Println(clientInfo.GetUserID())
 

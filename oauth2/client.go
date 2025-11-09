@@ -174,7 +174,7 @@ func (c *ClientCredentials) GetHttpServerHandler() (http.HandlerFunc, string) {
 		}
 	}, c.getTokenPath()
 }
-func (c *ClientCredentials) CheckTokenInfo(ctx context.Context, token string) (oauth2.TokenInfo, error) {
+func (c *ClientCredentials) getTokenInfo(ctx context.Context, token string) (oauth2.TokenInfo, error) {
 	srv := c.GetServer()
 
 	token, _ = jwtRequest.AuthorizationHeaderExtractor.Filter(token)
@@ -221,4 +221,15 @@ func (c *ClientCredentials) CheckTokenInfo(ctx context.Context, token string) (o
 		return nil, errors.ErrExpiredAccessToken
 	}
 	return tokenInfo, nil
+}
+func (c *ClientCredentials) GetClientInfo(ctx context.Context, token string) (oauth2.ClientInfo, error) {
+	tokenInfo, err := c.getTokenInfo(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	clientInfo, err := c.ClientStorage.GetByID(ctx, tokenInfo.GetClientID())
+	if err != nil {
+		return nil, err
+	}
+	return clientInfo, nil
 }
