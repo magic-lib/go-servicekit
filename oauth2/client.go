@@ -77,12 +77,14 @@ https://github.com/go-oauth2/oauth2/blob/master/generate.go
 //}
 
 type ClientCredentials struct {
-	PathGroup         string
-	TokenStorage      oauth2.TokenStore            //token存储方式
-	ClientStorage     oauth2.ClientStore           //client存储方式
-	JWTAccessGenerate *generates.JWTAccessGenerate //jwt的配置，如果配置了，则会使用jwt生成方式
-	getAccessToken    server.AuthorizeScopeHandler
-	server            *server.Server
+	PathGroup          string
+	TokenStorage       oauth2.TokenStore            //token存储方式
+	ClientStorage      oauth2.ClientStore           //client存储方式
+	JWTAccessGenerate  *generates.JWTAccessGenerate //jwt的配置，如果配置了，则会使用jwt生成方式
+	ClientScopeHandler server.ClientScopeHandler    //判断权限scope的范围是否合法
+
+	getAccessToken server.AuthorizeScopeHandler
+	server         *server.Server
 
 	serverName           string
 	jwtSecret            string
@@ -141,8 +143,11 @@ func (c *ClientCredentials) GetServer() *server.Server {
 		}
 		return req.ClientID, req.ClientSecret, nil
 	}
-
 	srv.SetClientInfoHandler(clientInfoHandler)
+
+	if c.ClientScopeHandler != nil {
+		srv.SetClientScopeHandler(c.ClientScopeHandler)
+	}
 	c.server = srv
 
 	return srv
