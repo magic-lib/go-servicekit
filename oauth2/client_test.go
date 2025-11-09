@@ -35,7 +35,7 @@ func TestClientCredentials(t *testing.T) {
 		return
 	}
 
-	path, handler := cTemp.GetHttpServerHandler()
+	handler, path := cTemp.GetHttpServerHandler()
 
 	http.HandleFunc(path, handler)
 	http.HandleFunc("/read", func(writer http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/errors"
 	"github.com/go-oauth2/oauth2/v4/generates"
@@ -58,10 +59,6 @@ client_secret=827ccb0eea8a706c4c34a16891f84e7b&scope=aaaa&refresh_token=6S3C0HQZ
 https://github.com/go-oauth2/oauth2/blob/master/generate.go
 */
 
-const (
-	clientTokenPath = "/oauth2/token"
-)
-
 //type GinOauthOption struct {
 //	RouteFrontPath           string                          //路径的前缀，比如需要加上/v1/等等
 //	ClientStore              oauth2.ClientStore              //client存储在mysql中 必传
@@ -80,6 +77,7 @@ const (
 //}
 
 type ClientCredentials struct {
+	PathGroup         string
 	TokenStorage      oauth2.TokenStore            //token存储方式
 	ClientStorage     oauth2.ClientStore           //client存储方式
 	JWTAccessGenerate *generates.JWTAccessGenerate //jwt的配置，如果配置了，则会使用jwt生成方式
@@ -94,6 +92,9 @@ type ClientCredentials struct {
 }
 
 func NewClientCredentials(cfg *ClientCredentials) (*ClientCredentials, error) {
+	if cfg.PathGroup == "" {
+		cfg.PathGroup = "oauth2"
+	}
 	if cfg.TokenStorage == nil {
 		var err error
 		cfg.TokenStorage, err = store.NewMemoryTokenStore()
@@ -155,17 +156,18 @@ func (c *ClientCredentials) GetTokenData(ctx context.Context, clientInfo *oauth2
 	return srv.GetTokenData(ti), nil
 }
 
-func (c *ClientCredentials) getRequestPath() string {
-	return clientTokenPath
+func (c *ClientCredentials) getTokenPath() string {
+	path := fmt.Sprintf("/%s/%s", c.PathGroup, "token")
+	return path
 }
 
-func (c *ClientCredentials) GetHttpServerHandler() (string, http.HandlerFunc) {
+func (c *ClientCredentials) GetHttpServerHandler() (http.HandlerFunc, string) {
 	srv := c.GetServer()
-	return c.getRequestPath(), func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if err := srv.HandleTokenRequest(w, r); err != nil {
 			log.Print("Internal Error:", err.Error())
 		}
-	}
+	}, c.getTokenPath()
 }
 func (c *ClientCredentials) CheckTokenInfo(ctx context.Context, token string) (oauth2.TokenInfo, error) {
 	srv := c.GetServer()
@@ -215,101 +217,3 @@ func (c *ClientCredentials) CheckTokenInfo(ctx context.Context, token string) (o
 	}
 	return tokenInfo, nil
 }
-
-//
-//func (c *ClientCredentials) getServerHandler() http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//		w.Header().Set("Content-Type", types.RespContentType)
-//
-//		req := new(types.ClientTokenRequest)
-//		query := param.NewParam().GetAllString(r)
-//		err := conv.Unmarshal(query, req)
-//		if err != nil {
-//			sendError(w, http.StatusBadRequest, "invalid_request", "invalid request")
-//			return
-//		}
-//
-//		accesTokenData, statusCode, errRet := c.getAccessTokenData("jwt", req)
-//		if errRet != nil {
-//			sendError(w, statusCode, errRet.Error, errRet.ErrorDescription)
-//			return
-//		}
-//
-//		w.WriteHeader(statusCode)
-//		_ = json.NewEncoder(w).Encode(accesTokenData)
-//	}
-//}
-
-//func (c *ClientCredentials) getAccessTokenData(encodeType string, req *types.ClientTokenRequest) (*types.ClientTokenResponse, int, *types.ErrorResponse) {
-//	errRet := new(types.ErrorResponse)
-//	if req.GrantType == "" || req.ClientID == "" || req.ClientSecret == "" {
-//		errRet.Error = "invalid_request"
-//		errRet.ErrorDescription = "缺少必需参数（grant_type/client_id/client_secret）"
-//		return nil, http.StatusBadRequest, errRet
-//	}
-//	if req.GrantType != types.GrantTypeClient {
-//		errRet.Error = "unsupported_grant_type"
-//		errRet.ErrorDescription = "仅支持 client_credentials 授权模式"
-//		return nil, http.StatusUnsupportedMediaType, errRet
-//	}
-//
-//	clientSecret := c.clientSecretHandler(req.ClientID)
-//	if clientSecret == "" || clientSecret != req.ClientSecret {
-//		errRet.Error = "invalid_client"
-//		errRet.ErrorDescription = "客户端身份验证失败"
-//		return nil, http.StatusUnauthorized, errRet
-//	}
-//
-//	allowedScopes := c.allowedScopesHandler(req.ClientID)
-//	requestedScopes := utils.Split(req.Scope, []string{" ", ",", ";", "|"})
-//	grantedScopes := make([]string, 0)
-//	lo.ForEach(requestedScopes, func(s string, index int) {
-//		if ok, _ := cond.Contains(allowedScopes, s); ok {
-//			grantedScopes = append(grantedScopes, s)
-//		}
-//	})
-//	finalScope := strings.Join(grantedScopes, " ")
-//
-//	encodeType = strings.ToLower(encodeType)
-//
-//	var accessToken string
-//	if encodeType == "jwt" {
-//		var err error
-//		accessToken, err = c.generateJWTToken(req.ClientID, finalScope)
-//		if err != nil {
-//			errRet.Error = "server_error"
-//			errRet.ErrorDescription = "生成令牌失败"
-//			return nil, http.StatusInternalServerError, errRet
-//		}
-//	}
-//
-//	if accessToken == "" {
-//		errRet.Error = "server_error"
-//		errRet.ErrorDescription = "encodeType error"
-//		return nil, http.StatusInternalServerError, errRet
-//	}
-//
-//	return &types.ClientTokenResponse{
-//		AccessToken: accessToken,
-//		TokenType:   "Bearer",
-//		ExpiresIn:   int64(c.jwtTokenTTL.Seconds()),
-//		Scope:       finalScope,
-//	}, http.StatusOK, nil
-//}
-//
-//func (c *ClientCredentials) generateJWTToken(clientID, scope string) (string, error) {
-//	claims := jwt.MapClaims{
-//		"client_id": clientID,                                          // 标识令牌所属客户端
-//		"scope":     scope,                                             // 权限范围
-//		"exp":       jwt.NewNumericDate(time.Now().Add(c.jwtTokenTTL)), // 过期时间
-//		"iat":       jwt.NewNumericDate(time.Now()),                    // 签发时间
-//		"iss":       c.serverName,                                      // 签发者（授权服务器标识）
-//	}
-//
-//	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-//	signedToken, err := token.SignedString([]byte(c.jwtSecret))
-//	if err != nil {
-//		return "", fmt.Errorf("JWT 签名失败：%w", err)
-//	}
-//	return signedToken, nil
-//}
