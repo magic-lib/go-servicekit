@@ -1,28 +1,31 @@
+ZeroPackageDir := ${GOPATH}/code/magic-lib/go-servicekit/go-zero
+ZGrpcProtoHub := ./rpc/protohub
+ZGrpcRpcCreateFolder := ./rpc
+ZGrpcZRpcCreateFolder := ./zrpc
+ModelGoDir := "./internal/model/db"
+ModelMysqlDsn := ""
+
 gen-update-package:
+	go get github.com/magic-lib/go-servicekit@master
 	go get github.com/magic-lib/go-plat-utils@master
 	go mod tidy
 
 gen-model:
-	#@goctl template init --home ./internal/model/db/tmpl
-	@rm -rf ./internal/model/db/*_gen.go
+	#@goctl template init --home $(modelGoDir)/tmpl
+	@rm -rf $(ModelGoDir)/*_gen.go
 	@goctl model mysql datasource \
-    		--dir ./internal/model/db/ \
+    		--dir $(ModelGoDir) \
     		--table "*" \
-    		--home ./goctl-tmpl \
-    		--url "root:xxxxxx@tcp(xxxxxxx:xx)/xxxxxx";
-
-
-protohub := ./rpc/protohub
-grpcCreateFolder := ./rpc
-zGrpcCreateFolder := ./zrpc
+    		--home $(ZeroPackageDir)/goctl-tmpl \
+    		--url $(ModelMysqlDsn);
 
 gen-grpc:
-	@for filename in $(protohub)/*.proto; do \
+	@for filename in $(ZGrpcProtoHub)/*.proto; do \
 	  echo "正在处理文件: $${filename}"; \
-	  goctl rpc protoc $${filename} --go_out=$(grpcCreateFolder) \
-      		--go-grpc_out=$(grpcCreateFolder) \
-      		--proto_path=$(protohub) \
-      		--proto_path=${GOPATH}/pkg/mod/protoc-29.2-linux-x86_64/include \
-      		--zrpc_out=$(zGrpcCreateFolder) \
+	  goctl rpc protoc $${filename} --go_out=$(ZGrpcRpcCreateFolder) \
+      		--go-grpc_out=$(ZGrpcRpcCreateFolder) \
+      		--proto_path=$(ZGrpcProtoHub) \
+      		--proto_path=$(ZeroPackageDir)/goctl-zrpc/protoc-29.2/include \
+      		--zrpc_out=$(ZGrpcZRpcCreateFolder) \
       		--style go_zero; \
 	done
