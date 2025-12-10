@@ -1,0 +1,1 @@
+`db:"{{.field}}" json:"{{if eq .field "deleted"}}-{{else}}{{.field}}{{end}}"`
