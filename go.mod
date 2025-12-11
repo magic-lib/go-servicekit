@@ -3,21 +3,21 @@ module github.com/magic-lib/go-servicekit
 go 1.24.3
 
 require (
-	github.com/IBM/watsonx-go v1.0.2
 	github.com/ThreeDotsLabs/watermill v1.5.1
 	github.com/ThreeDotsLabs/watermill-sql/v4 v4.1.2
 	github.com/go-oauth2/oauth2/v4 v4.5.4
-	github.com/go-sql-driver/mysql v1.9.0
+	github.com/go-sql-driver/mysql v1.9.3
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/consul/api v1.32.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/magic-lib/go-plat-retry v1.20250604.1
-	github.com/magic-lib/go-plat-utils v1.20250721.3-0.20250731042618-5e1812002d6e
+	github.com/magic-lib/go-plat-utils v1.20251105.2-0.20251211023014-62322dcdb315
 	github.com/orcaman/concurrent-map/v2 v2.0.1
 	github.com/samber/lo v1.50.0
 	github.com/streadway/amqp v1.1.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.8
 )
 
@@ -94,7 +94,7 @@ require (
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240701130421-f6361c86f094 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
