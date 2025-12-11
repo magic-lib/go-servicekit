@@ -19,7 +19,7 @@ gen-model:
     		--home $(ZeroPackageDir)/goctl-tmpl \
     		--url $(ModelMysqlDsn);
 
-gen-grpc:
+gen-zero-grpc:
 	@for filename in $(ZGrpcProtoHub)/*.proto; do \
 	  echo "正在处理文件: $${filename}"; \
 	  goctl rpc protoc $${filename} --go_out=$(ZGrpcRpcCreateFolder) \
@@ -29,3 +29,15 @@ gen-grpc:
       		--zrpc_out=$(ZGrpcZRpcCreateFolder) \
       		--style go_zero; \
 	done
+	@echo "生成zero-grpc代码完成"
+
+gen-grpc:
+	@for filename in $(ZGrpcProtoHub)/*.proto; do \
+	  echo "正在处理文件: $${filename}"; \
+	  protoc --go_out=$(ZGrpcRpcCreateFolder) \
+      		--go-grpc_out=$(ZGrpcRpcCreateFolder) \
+      		--proto_path=$(ZGrpcProtoHub) \
+      		--proto_path=$(ZeroPackageDir)/goctl-zrpc/protoc-29.2/include \
+      		$${filename}; \
+	done
+	@echo "生成grpc代码完成"
