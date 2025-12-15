@@ -9,7 +9,7 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	case nil:
 		return &resp, nil
 	case sqlc.ErrNotFound:
-		return nil, ErrNotFound
+    	return nil, nil
 	default:
 		return nil, err
 	}{{else}}query := fmt.Sprintf("select %s from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}} limit 1", {{.lowerStartCamelObject}}Rows, m.table)
@@ -19,7 +19,7 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	case nil:
 		return &resp, nil
 	case sqlx.ErrNotFound:
-		return nil, ErrNotFound
+    	return nil, nil
 	default:
 		return nil, err
 	}{{end}}
