@@ -15,7 +15,7 @@ type ConsumerOptions struct {
 }
 
 // StartConsumer 初始化一个消费端
-func (r *rabbitClient) StartConsumer(opt *ConsumerOptions) error {
+func (r *RabbitClient) StartConsumer(opt *ConsumerOptions) error {
 	ch, err := r.client.Channel()
 	if err != nil {
 		defer func() {

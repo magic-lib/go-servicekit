@@ -31,11 +31,11 @@ func TestRabbitMQClient(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	id, err := client.ProduceMessage(&rabbitmq.ProducerOptions{
+	id, err := client.ProduceMessage(&rabbitmq.ProducerOption{
 		QueueName: "test123",
 		Content:   "hello world444",
 	})
-	id, err = client.ProduceMessage(&rabbitmq.ProducerOptions{
+	id, err = client.ProduceMessage(&rabbitmq.ProducerOption{
 		QueueName: "test123",
 		Content:   "hello world333",
 	})

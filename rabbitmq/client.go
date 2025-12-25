@@ -6,13 +6,13 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type rabbitClient struct {
+type RabbitClient struct {
 	client *amqp.Connection
 }
 
 // NewRabbitMQClient 连接到 RabbitMQ
-func NewRabbitMQClient(conn *conn.Connect) (*rabbitClient, error) {
-	client := new(rabbitClient)
+func NewRabbitMQClient(conn *conn.Connect) (*RabbitClient, error) {
+	client := new(RabbitClient)
 	amqpURI := fmt.Sprintf("amqp://%s:%s@%s:%s/", conn.Username, conn.Password, conn.Host, conn.Port)
 	connAmqp, err := amqp.Dial(amqpURI)
 	if err != nil {
