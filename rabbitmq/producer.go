@@ -1,9 +1,11 @@
 package rabbitmq
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/magic-lib/go-plat-utils/cond"
+	"github.com/magic-lib/go-servicekit/tracer"
 	"github.com/streadway/amqp"
 )
 
@@ -17,26 +19,26 @@ type ProducerOption struct {
 }
 
 // ProduceMessage 发送消息到队列
-func (r *RabbitClient) ProduceMessage(opt *ProducerOption) (messageId string, err error) {
+func (r *RabbitClient) ProduceMessage(ctx context.Context, opt *ProducerOption) (messageId string, err error) {
 	if opt == nil {
 		return "", fmt.Errorf("opt param error")
 	}
 	opt.Exchange = ""
 	opt.Kind = ""
-	return r.commPushMessage(opt)
+	return r.commPushMessage(ctx, opt)
 }
 
 // ProduceMessageWithExchange 发送消息到队列
-func (r *RabbitClient) ProduceMessageWithExchange(opt *ProducerOption) (messageId string, err error) {
+func (r *RabbitClient) ProduceMessageWithExchange(ctx context.Context, opt *ProducerOption) (messageId string, err error) {
 	if opt == nil {
 		return "", fmt.Errorf("opt param error")
 	}
 	if opt.Kind == "" {
 		opt.Kind = "direct"
 	}
-	return r.commPushMessage(opt)
+	return r.commPushMessage(ctx, opt)
 }
-func (r *RabbitClient) commPushMessage(opt *ProducerOption) (messageId string, err error) {
+func (r *RabbitClient) commPushMessage(ctx context.Context, opt *ProducerOption) (messageId string, err error) {
 	if opt == nil || opt.QueueName == "" {
 		return "", fmt.Errorf("ProduceMessage param error")
 	}
@@ -97,6 +99,14 @@ func (r *RabbitClient) commPushMessage(opt *ProducerOption) (messageId string, e
 		config.MessageId = uuid.NewString()
 	}
 	config.Body = []byte(opt.Content)
+
+	_, ok := tracer.TraceProvider()
+	if ok {
+		tc := tracer.GetTraceConfig()
+		if tc != nil {
+			config.Headers = tc.RabbitMQPublishTable(ctx, map[string]any{})
+		}
+	}
 
 	err = ch.Publish(
 		opt.Exchange,  // 交换机名称（使用默认交换机）

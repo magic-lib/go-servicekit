@@ -1,12 +1,14 @@
 package rabbitmq
 
 import (
+	"context"
 	"fmt"
 	"github.com/magic-lib/go-plat-utils/goroutines"
+	"github.com/magic-lib/go-servicekit/tracer"
 )
 
 // MessageHandler 消息消费的回调方法
-type MessageHandler func(messageId, messageData string) error
+type MessageHandler func(ctx context.Context, messageId, messageData string) error
 
 // ConsumerOptions 启动一个消费端的所有参数
 type ConsumerOptions struct {
@@ -56,8 +58,17 @@ func (r *RabbitClient) StartConsumer(opt *ConsumerOptions) error {
 				fmt.Println("consumer无法声明队列: ", err.Error())
 				continue
 			}
+
 			for d := range msgs {
-				err = opt.Handler(d.MessageId, string(d.Body))
+				ctx := context.Background()
+				_, ok := tracer.TraceProvider()
+				if ok {
+					tc := tracer.GetTraceConfig()
+					if tc != nil {
+						ctx = tc.RabbitMQConsumer(ctx, d.Headers)
+					}
+				}
+				err = opt.Handler(ctx, d.MessageId, string(d.Body))
 				if err == nil {
 					err = d.Ack(false)
 					fmt.Println("消息已确认", err)
