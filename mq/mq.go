@@ -1,13 +1,16 @@
 package mq
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // Event 代表一个通用的消息事件
 type Event struct {
-	RoutingKey string         `json:"routing_key"` // 路由键
-	MessageId  string         `json:"message_id"`  // 消息ID
-	Payload    []byte         `json:"payload"`     // 消息内容
-	Headers    map[string]any `json:"headers"`     // 用于传递元数据，如 Trace Context
+	Id        string         `json:"id"`        // 消息ID
+	Timestamp time.Time      `json:"timestamp"` // 消息创建时间戳
+	Headers   map[string]any `json:"headers"`   // 用于传递元数据，如 Trace Context
+	Payload   []byte         `json:"payload"`   // 消息内容
 }
 
 // Publisher 定义了消息发布者的接口
@@ -27,7 +30,7 @@ type Consumer interface {
 	// queueName: 队列名称
 	// routingKey: 绑定的路由键
 	// handler: 消息处理函数
-	Start(queueName, routingKey, exchangeName string, handler ConsumerHandler) error
+	Start(handler ConsumerHandler) error
 	// Close 关闭消费者连接
 	Close()
 }
