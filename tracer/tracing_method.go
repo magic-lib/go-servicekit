@@ -24,7 +24,7 @@ const (
 
 func GetTraceConfig() *TraceConfig {
 	if globalTraceConfig == nil {
-		return nil
+		return new(TraceConfig)
 	}
 	return globalTraceConfig.Load().(tracerConfigHolder).tc
 }
@@ -50,7 +50,7 @@ func TraceProvider() (*sdktrace.TracerProvider, bool) {
 	return nil, false
 }
 
-func SpanToRequest(ctx context.Context, req *http.Request, traceId, spanId string) bool {
+func SpanToHeader(ctx context.Context, headers http.Header, traceId, spanId string) bool {
 	span := trace.SpanFromContext(ctx)
 	if span == nil {
 		return false
@@ -77,7 +77,7 @@ func SpanToRequest(ctx context.Context, req *http.Request, traceId, spanId strin
 		ctx = trace.ContextWithSpanContext(ctx, spanContext)
 	}
 	//req.Header 是引用类型，可以直接修改
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(req.Header))
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(headers))
 	return true
 }
 func SpanFromRequest(ctx context.Context, req *http.Request) context.Context {
