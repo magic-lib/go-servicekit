@@ -43,7 +43,7 @@ func TraceProvider() (*sdktrace.TracerProvider, bool) {
 	provider := otel.GetTracerProvider()
 	if !cond.IsNil(provider) {
 		tp, ok := provider.(*sdktrace.TracerProvider)
-		if ok {
+		if ok && tp != nil {
 			return tp, true
 		}
 	}

@@ -3,7 +3,6 @@ package tracer
 import (
 	"context"
 	"fmt"
-	"github.com/magic-lib/go-plat-utils/cond"
 	"github.com/magic-lib/go-plat-utils/goroutines"
 	ztrace "github.com/zeromicro/go-zero/core/trace"
 	"go.opentelemetry.io/otel"
@@ -26,11 +25,12 @@ import (
 type TraceConfig struct {
 	Namespace      string            `json:"namespace"`    //整个项目命名
 	ServiceName    string            `json:"service_name"` //各个微服务命名
-	Endpoint       string            `json:"endpoint"`
+	Endpoint       string            `json:"endpoint"`     //接入点
 	Batcher        string            `json:",default=jaeger,options=jaeger|zipkin|otlpgrpc|otlphttp|file"`
 	OtlpHeaders    map[string]string `json:",optional"`
 	OtlpHttpPath   string            `json:",optional"`
 	OtlpHttpSecure bool              `json:",optional"`
+	RatioPercent   int               `json:",ratio_percent"` //采样比例
 	lastTracer     trace.Tracer      //上次使用过的tracer
 	useGoZero      bool
 }
@@ -59,6 +59,15 @@ func (hc *TraceConfig) checkConfig() error {
 	}
 	if hc.Namespace == "" {
 		return fmt.Errorf("trace Namespace is required")
+	}
+	if hc.RatioPercent == 0 { //默认为50%概率
+		hc.RatioPercent = 50
+	}
+	if hc.RatioPercent > 100 {
+		hc.RatioPercent = 100
+	}
+	if hc.RatioPercent < 0 {
+		hc.RatioPercent = 0
 	}
 
 	if hc.ServiceName == "" {
@@ -89,12 +98,8 @@ func (hc *TraceConfig) startNewSpan(ctx context.Context, spanName string) (conte
 }
 
 func (hc *TraceConfig) initTraceProvider() (*sdktrace.TracerProvider, error) {
-	provider := otel.GetTracerProvider()
-	if !cond.IsNil(provider) {
-		tp, ok := provider.(*sdktrace.TracerProvider)
-		if ok {
-			return tp, nil
-		}
+	if tpTemp, ok := TraceProvider(); ok {
+		return tpTemp, nil
 	}
 
 	err := hc.checkConfig()
@@ -117,21 +122,22 @@ func (hc *TraceConfig) initTraceProvider() (*sdktrace.TracerProvider, error) {
 		return nil, err
 	}
 
+	sampler := sdktrace.TraceIDRatioBased(float64(hc.RatioPercent) / 100)
 	opts := []sdktrace.TracerProviderOption{
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSampler(sampler),
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(res),
 	}
 
 	// 创建 TracerProvider，配置批量处理器和资源
-	tp := sdktrace.NewTracerProvider(opts...)
-	otel.SetTracerProvider(tp)
+	newTp := sdktrace.NewTracerProvider(opts...)
+	otel.SetTracerProvider(newTp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
 		log.Printf("[otel] error: %v", err)
 	}))
 
-	return tp, nil
+	return newTp, nil
 }
 
 func (hc *TraceConfig) createExporter() (sdktrace.SpanExporter, error) {
