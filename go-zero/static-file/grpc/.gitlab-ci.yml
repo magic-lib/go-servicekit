@@ -1,0 +1,93 @@
+stages:
+  - generate_pb
+
+variables:
+  GIT_BRANCH_NAME: "master" # 目标仓库的分支名称
+  GIT_TOKEN: "" # GitLab 访问令牌
+  GENERATED_DIR: ""
+
+generate_pb:
+  stage: generate_pb
+  image: golang:1.24.3
+  before_script:
+    # 安装 protoc
+    - apt-get update && apt-get install -y wget unzip
+    - wget https://github.com/protocolbuffers/protobuf/releases/download/v33.4/protoc-33.4-linux-x86_64.zip -O protoc.zip
+    - unzip protoc.zip -d /usr/local
+    - chmod +x /usr/local/bin/protoc
+    - rm -f protoc.zip
+
+    # 安装 protoc-gen-go 和 protoc-gen-go-grpc 插件
+    - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+    - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+    - export PATH=$PATH:$(go env GOPATH)/bin
+
+  script:
+    # 检查变更的 proto 文件
+    - CHANGED_PROTO_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.proto$' || true)
+    - DELETED_PROTO_FILES=$(git diff --name-only --diff-filter=D HEAD~1 HEAD | grep '\.proto$' || true)
+    - |
+      if [ -z "$CHANGED_PROTO_FILES" ] && [ -z "$DELETED_PROTO_FILES" ]; then
+        echo "No .proto files were changed. Skipping generation."
+        exit 0
+      fi
+
+    # 提取变更文件的目录，并去重
+    - CHANGED_PROTO_DIRS=$(echo "$CHANGED_PROTO_FILES" | xargs -n1 dirname | sort -u)
+
+    # 创建生成目录
+    - |
+      TARGET_DIR="./"
+      if [ -z "$GENERATED_DIR" ]; then
+        # 变量为空，设为当前目录（.）
+        TARGET_DIR="./"
+      else
+        # 变量非空，设为当前目录下的子目录（拼接 ./ 确保是相对路径）
+        TARGET_DIR="./$GENERATED_DIR/"
+      fi
+    - mkdir -p $TARGET_DIR
+    - echo $CHANGED_PROTO_FILES
+
+    # 处理新增或修改的 proto 文件
+    - |
+      if [ -n "$CHANGED_PROTO_FILES" ]; then
+        for DIR in $CHANGED_PROTO_DIRS; do
+          echo "Processing .proto files in directory: $DIR"
+          protoc --proto_path=./$DIR --go_out=$TARGET_DIR --go-grpc_out=$TARGET_DIR ./$DIR/*.proto
+        done
+      fi
+    # 处理删除的 proto 文件
+    - |
+      if [ -n "$DELETED_PROTO_FILES" ]; then
+        echo "Processing deleted .proto files."
+        for FILE in $DELETED_PROTO_FILES; do
+          PB_FILE_BASE=$(basename "$FILE" .proto)
+          PB_FILE_GO="$TARGET_DIR/$PB_FILE_BASE.pb.go"
+          PB_FILE_GRPC=`echo "$TARGET_DIR/$PB_FILE_BASE"_grpc.pb.go`
+          if [ -f "$PB_FILE_GO" ]; then
+            echo "Deleting $PB_FILE_GO"
+            rm "$PB_FILE_GO"
+          fi
+          if [ -f "$PB_FILE_GRPC" ]; then
+            echo "Deleting $PB_FILE_GRPC"
+            rm "$PB_FILE_GRPC"
+          fi
+        done
+      fi
+    # 获取用户的git地址
+    - |
+      MASKED_URL=$(git remote get-url origin | sed -e 's/^https:\/\///' -e 's/^http:\/\///' | sed -e '/\.git$/! s/$/.git/')
+      GIT_REPO_PATH=$(echo "$MASKED_URL" | sed 's/^[^@]*//')
+      # 输出验证结果
+      echo "获取 GIT_REPO_PATH: $GIT_REPO_PATH"
+    # 提交生成的 pb 文件到 Git
+    - |
+      git config --global user.name "ci-runner"
+      git config --global user.email "ci-runner@example.com"
+      git add $TARGET_DIR
+      if ! git diff --cached --quiet; then
+        git commit -m "Auto-generate pb files [skip ci]"
+        git push https://oauth2:${GIT_TOKEN}${GIT_REPO_PATH} HEAD:refs/heads/${GIT_BRANCH_NAME}
+      else
+        echo "No changes to commit."
+      fi

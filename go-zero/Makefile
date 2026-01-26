@@ -1,7 +1,4 @@
 ZeroTemplateDir := ${GOPATH}/code/magic-lib/go-servicekit/go-zero
-ZGrpcProtoHub := ./goctl-zrpc/protohub
-ZGrpcRpcCreateFolder := ./demo/rpc
-ZGrpcZRpcCreateFolder := ./demo/zrpc
 ModelGoDir := "./demo/model/db"
 ModelMysqlDsn := "root:mjhttyryt565-jyjh5824t-p55w@tcp(192.168.2.84:10365)/account-server"
 GoCtlPath := "${GOPATH}/bin"
@@ -15,9 +12,12 @@ APIGoProjectDir := "./demo"
 gen-update-package:
 	go install github.com/zeromicro/go-zero/tools/goctl@latest
 	go install github.com/zeromicro/goctl-swagger@latest
-	go get github.com/magic-lib/go-servicekit@master
+	#go get github.com/magic-lib/go-servicekit@master
 	go get github.com/magic-lib/go-plat-utils@master
 	go install github.com/Mikaelemmmm/sql2pb@latest
+	#https://github.com/protocolbuffers/protobuf/releases
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go mod tidy
 
 gen-zero-init:
@@ -36,43 +36,66 @@ gen-model:
     		--home $(ZeroTemplateDir)/goctl-tmpl \
     		--url $(ModelMysqlDsn) --style go_zero;
 
-#go_package go语言中的包路径和包名
-#package 是proto本身的包名
-#		-user "root" \
-#		-password "mjhttyryt565-jyjh5824t-p55w" \
-#		-host "192.168.2.84" \
-#		-port "10365" \
-#		-schema "account-server" \
 
+GrpcProtoHub := ./goctl-zrpc/protohub
+GrpcProtoDatabaseName := allinone-credit
+GrpcProtoServiceName := CreditServer
+GrpcProtoGoPackage := ./creditpb
+GrpcProtoPackage := creditpb
+GrpcProtoCreateFileName := credit_server
+GrpcRpcGoCreateFolder := ./demo/rpc
 
-gen-zero-grpc:
+gen-mysql-proto:
+	@mkdir -p $(GrpcProtoHub);
 	@sql2pb \
 		-db "mysql" \
 		-dsn $(ModelMysqlDsn) \
-		-schema "account-server" \
+		-schema $(GrpcProtoDatabaseName) \
 		-table "*" \
-		-service_name "AccountServer" \
-		-go_package "./commpb" \
-		-package "commpb" -field_style "sql_pb" > $(ZGrpcProtoHub)/account-server.proto;
-	@echo "正在生成zero-grpc代码"
-	@for filename in $(ZGrpcProtoHub)/*.proto; do \
-	  echo "正在处理文件: $${filename}"; \
-	  goctl rpc protoc $${filename} --go_out=$(ZGrpcRpcCreateFolder) \
-      		--go-grpc_out=$(ZGrpcRpcCreateFolder) \
-      		--proto_path=$(ZGrpcProtoHub) \
-      		--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-29.2/include \
-      		--zrpc_out=$(ZGrpcZRpcCreateFolder) \
-      		--style go_zero; \
-	done
-	@echo "生成zero-grpc代码完成"
+		-service_name $(GrpcProtoServiceName) \
+		-go_package $(GrpcProtoGoPackage) \
+		-package $(GrpcProtoPackage) -field_style "sql_pb" > $(GrpcProtoHub)/$(GrpcProtoCreateFileName).proto;
 
 gen-grpc:
-	@for filename in $(ZGrpcProtoHub)/*.proto; do \
+	@for filename in $(GrpcProtoHub)/*.proto; do \
 	  echo "正在处理文件: $${filename}"; \
-	  mkdir -p $(ZGrpcRpcCreateFolder); \
-	  protoc $${filename} --go_out=$(ZGrpcRpcCreateFolder) \
-      		--go-grpc_out=$(ZGrpcRpcCreateFolder) \
-      		--proto_path=$(ZGrpcProtoHub) \
-      		--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-29.2/include; \
+	  mkdir -p $(GrpcRpcGoCreateFolder); \
+	  protoc $${filename} --go_out=$(GrpcRpcGoCreateFolder) \
+      		--go-grpc_out=$(GrpcRpcGoCreateFolder) \
+      		--proto_path=$(GrpcProtoHub) \
+      		--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-33.4/include; \
 	done
+	@cp -f $(ZeroTemplateDir)/goctl-tmpl/rpc/.gitlab-ci.yml $(GrpcRpcGoCreateFolder);
 	@echo "生成grpc代码完成"
+
+ZGrpcZRpcCreateFolder := ./demo/zrpc
+
+gen-zero-grpc:
+	@echo "正在生成zero-grpc代码"
+	@for filename in $(GrpcProtoHub)/*.proto; do \
+	  echo "正在处理文件: $${filename}"; \
+	  goctl rpc protoc $${filename} --go_out=$(GrpcRpcGoCreateFolder) \
+			--go-grpc_out=$(GrpcRpcGoCreateFolder) \
+			--proto_path=$(GrpcProtoHub) \
+			--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-33.4/include \
+			--zrpc_out=$(ZGrpcZRpcCreateFolder) \
+			--style go_zero; \
+	done
+	@cp -f $(ZeroTemplateDir)/goctl-tmpl/rpc/.gitlab-ci.yml $(GrpcRpcGoCreateFolder);
+	@echo "生成zero-grpc代码完成"
+
+gen-zero-grpc-all:
+	@MAKE gen-mysql-proto;
+	@MAKE gen-zero-grpc;
+
+
+krotos-go-install:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/go-kratos/kratos/cmd/kratos/v2@latest
+	go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@latest
+	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
+	go install github.com/google/wire/cmd/wire@latest
+
+krotos-init:
+	@cd demo && kratos new helloworld3

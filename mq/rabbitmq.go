@@ -7,10 +7,12 @@ import (
 	"github.com/magic-lib/go-plat-cache/cache"
 	"github.com/magic-lib/go-plat-utils/cond"
 	"github.com/magic-lib/go-plat-utils/conn"
+	"github.com/magic-lib/go-plat-utils/conv"
 	"github.com/magic-lib/go-plat-utils/goroutines"
 	"github.com/magic-lib/go-servicekit/tracer"
 	"log"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
@@ -18,9 +20,18 @@ import (
 )
 
 const (
-	resendDelay = 5 * time.Second
+	resendDelay = 2 * time.Second
 	maxRetries  = 3
 	mqNamespace = "rabbit-mq"
+)
+
+type ExchangeType string
+
+const (
+	ExchangeTypeDirect  ExchangeType = "direct"
+	ExchangeTypeFanout  ExchangeType = "fanout"
+	ExchangeTypeTopic   ExchangeType = "topic"
+	ExchangeTypeHeaders ExchangeType = "headers"
 )
 
 var (
@@ -44,9 +55,12 @@ func newRabbitMQClient(url string, conn *conn.Connect) (*RabbitMQClient, error) 
 		if conn.Protocol == "" {
 			conn.Protocol = "amqp"
 		}
-
 		url = fmt.Sprintf("%s://%s:%s@%s/", conn.Protocol, conn.Username, conn.Password, net.JoinHostPort(conn.Host, conn.Port))
 	}
+	if url == "" {
+		return nil, fmt.Errorf("RabbitMQ url is empty")
+	}
+
 	if poolManager == nil {
 		poolManager = cache.NewPoolManager[*amqp.Connection]()
 	}
@@ -67,7 +81,7 @@ func (c *RabbitMQClient) connect() (*amqp.Connection, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rabbitmq connection: %w", err)
 	}
-	return one.Resource, nil
+	return one.Get(), nil
 }
 func (c *RabbitMQClient) getChannel() (*amqp.Channel, error) {
 	connect, err := c.connect()
@@ -126,62 +140,71 @@ func (c *RabbitMQClient) Close() {
 }
 
 type RabbitMQConfig struct {
-	QueueName  string
-	Exchange   string
-	Kind       string
-	RoutingKey string
+	Url            string //连接地址，与Connect二选一，如果同时存在，以Url为准
+	Connect        *conn.Connect
+	PushRetryTimes int          // 推送失败重试次数
+	QueueName      string       //队列名
+	Exchange       string       //交换器
+	Kind           ExchangeType //交换器类型
+	RoutingKey     string       //路由键
 }
 
-// RabbitMQPublisher 实现了 Publisher 接口
-type RabbitMQPublisher struct {
-	client    *RabbitMQClient
-	queueName string
-	exchange  string
-	kind      string
+// rabbitMQPublisher 实现了 Publisher 接口
+type rabbitMQPublisher struct {
+	client *RabbitMQClient
+	cfg    *RabbitMQConfig
 }
 
 func checkConfig(cfg *RabbitMQConfig) error {
 	if cfg == nil {
 		return fmt.Errorf("config is empty")
 	}
-	if cfg.QueueName == "" {
-		return fmt.Errorf("queueName is empty")
-	}
+
 	if cfg.Exchange == "" {
 		return fmt.Errorf("exchange is empty")
 	}
-	if cfg.Kind == "" {
-		cfg.Kind = "direct"
+	if cfg.Kind != "" {
+		if cfg.Kind != ExchangeTypeFanout &&
+			cfg.Kind != ExchangeTypeDirect &&
+			cfg.Kind != ExchangeTypeTopic &&
+			cfg.Kind != ExchangeTypeHeaders {
+			return fmt.Errorf("kind: %s not support", cfg.Kind)
+		}
 	}
-	if cfg.RoutingKey == "" {
-		return fmt.Errorf("routingKey is empty")
+
+	if cfg.Kind != "" && cfg.Kind != ExchangeTypeFanout {
+		if cfg.RoutingKey == "" {
+			return fmt.Errorf("routingKey is empty")
+		}
 	}
 	return nil
 }
 
 // NewRabbitMQPublisher 创建一个新的 RabbitMQ 发布者
-func NewRabbitMQPublisher(url string, cfg *RabbitMQConfig) (Publisher, error) {
+func NewRabbitMQPublisher(cfg *RabbitMQConfig) (Publisher, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config is empty")
+	}
 	err := checkConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	client, err := newRabbitMQClient(url, nil)
+	client, err := newRabbitMQClient(cfg.Url, cfg.Connect)
 	if err != nil {
 		return nil, err
 	}
-	publisher := &RabbitMQPublisher{client: client}
-	if cfg == nil {
-		return publisher, nil
-	}
-	publisher.queueName = cfg.QueueName
-	publisher.exchange = cfg.Exchange
-	publisher.kind = cfg.Kind
+	publisher := &rabbitMQPublisher{client: client}
+	publisher.cfg = cfg
 	return publisher, nil
 }
 
-func (p *RabbitMQPublisher) getPublish(event Event) amqp.Publishing {
+func (p *rabbitMQPublisher) getPublishMessage(event *Event) amqp.Publishing {
 	if event.Headers == nil {
-		event.Headers = make(map[string]any)
+		event.Headers = make(http.Header)
+	}
+	headers := make(map[string]any)
+	for k, _ := range event.Headers {
+		headers[k] = event.Headers.Get(k)
 	}
 
 	msg := amqp.Publishing{
@@ -189,7 +212,8 @@ func (p *RabbitMQPublisher) getPublish(event Event) amqp.Publishing {
 		DeliveryMode: amqp.Persistent, // 消息持久化（重启后消息不丢失）
 		MessageId:    event.Id,
 		Body:         event.Payload,
-		Headers:      amqp.Table(event.Headers), // amqp.Table 的底层就是 map[string]interface{}
+		Headers:      amqp.Table(headers), // amqp.Table 的底层就是 map[string]interface{}
+		Timestamp:    event.Timestamp,
 	}
 
 	if msg.MessageId == "" {
@@ -198,58 +222,59 @@ func (p *RabbitMQPublisher) getPublish(event Event) amqp.Publishing {
 	if cond.IsJson(string(event.Payload)) {
 		msg.ContentType = "application/json"
 	}
+	msg.Headers["Content-Type"] = msg.ContentType
 
 	return msg
 }
 
-func (p *RabbitMQPublisher) Publish(ctx context.Context, event Event) (string, error) {
-	channel, err := p.client.getChannel()
+func getChannel(client *RabbitMQClient, cfg *RabbitMQConfig) (*amqp.Channel, *amqp.Queue, error) {
+	channel, err := client.getChannel()
 	if err != nil {
-		return "", err
+		return nil, nil, err
 	}
 
-	if p.exchange == "" {
-		return event.Id, fmt.Errorf("exchange name is empty")
-	}
-	if len(event.Payload) == 0 {
-		return event.Id, fmt.Errorf("event body empty")
-	}
-
-	if p.kind != "" {
-		err = channel.ExchangeDeclare(
-			p.exchange, // 交换机名称，由交换器发送到队列中
-			p.kind,     // 交换机类型（direct）direct、fanout、topic、headers
-			true,       // 持久化
-			false,      // 自动删除
-			false,      // 非排他性
-			false,      // 不阻塞
-			nil,        // 额外参数
+	if cfg.QueueName != "" {
+		queue, err := channel.QueueDeclare(
+			cfg.QueueName, // 队列名称
+			true,          // 持久化（重启后队列不丢失）
+			false,         // 是否为自动删除队列
+			false,         // 是否为排他性队列
+			false,         // 是否非阻塞声明
+			nil,           // 额外参数
 		)
-	} else {
-		if p.queueName == "" {
-			return "", fmt.Errorf("queue name is empty")
+		if err == nil {
+			return channel, &queue, nil
 		}
-
-		//amqp.Table{
-		//	"x-message-ttl": 3600000, // 消息 1小时过期
-		//	"x-max-length":  10000,   // 队列最多存 10000 条消息
-		//}
-
-		_, err = channel.QueueDeclare(
-			p.queueName, // 队列名称
-			true,        // 持久化（重启后队列不丢失）
-			false,       // 是否为自动删除队列
-			false,       // 是否为排他性队列
-			false,       // 是否非阻塞声明
-			nil,         // 额外参数
-		)
 	}
 
+	if cfg.Kind != "" {
+		err = channel.ExchangeDeclare(
+			cfg.Exchange,     // 交换机名称，由交换器发送到队列中
+			string(cfg.Kind), // 交换机类型（direct）direct、fanout、topic、headers
+			true,             // 持久化
+			false,            // 自动删除
+			false,            // 非排他性
+			false,            // 不阻塞
+			nil,              // 额外参数
+		)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed %s to declare an exchange: %w", cfg.Kind, err)
+		}
+		return channel, nil, nil
+	}
+	return nil, nil, fmt.Errorf("kind is empty")
+}
+
+func (p *rabbitMQPublisher) Publish(ctx context.Context, event *Event) (string, error) {
+	if event == nil {
+		return "", fmt.Errorf("event is empty")
+	}
+	channel, _, err := getChannel(p.client, p.cfg)
 	if err != nil {
 		return event.Id, fmt.Errorf("failed to declare an exchange: %w", err)
 	}
 
-	msg := p.getPublish(event)
+	msg := p.getPublishMessage(event)
 
 	_, ok := tracer.TraceProvider()
 	if ok {
@@ -259,14 +284,16 @@ func (p *RabbitMQPublisher) Publish(ctx context.Context, event Event) (string, e
 		}
 	}
 
-	routingKey := p.queueName
+	if p.cfg.PushRetryTimes <= 0 {
+		p.cfg.PushRetryTimes = maxRetries
+	}
 
-	for i := 0; i < maxRetries; i++ {
+	for i := 0; i < p.cfg.PushRetryTimes; i++ {
 		err = channel.Publish(
-			p.exchange, // 交换机名称（使用默认交换机）
-			routingKey, // 路由键（队列名称）
-			false,      // 非强制模式
-			false,      // 非立即模式
+			p.cfg.Exchange,   // 交换机名称（使用默认交换机）
+			p.cfg.RoutingKey, // 路由键（队列名称）
+			false,            // 非强制模式
+			false,            // 非立即模式
 			msg,
 		)
 		if err == nil {
@@ -278,79 +305,49 @@ func (p *RabbitMQPublisher) Publish(ctx context.Context, event Event) (string, e
 	return msg.MessageId, fmt.Errorf("failed to publish message after %d retries", maxRetries)
 }
 
-func (p *RabbitMQPublisher) Close() {
+func (p *rabbitMQPublisher) Close() {
 	p.client.Close()
 }
 
 // RabbitMQConsumer 实现了 Consumer 接口
 type RabbitMQConsumer struct {
-	client     *RabbitMQClient
-	queueName  string
-	exchange   string
-	kind       string
-	routingKey string
+	client *RabbitMQClient
+	cfg    *RabbitMQConfig
 }
 
 // NewRabbitMQConsumer 创建一个新的 RabbitMQ 消费者
-func NewRabbitMQConsumer(url string, cfg *RabbitMQConfig) (Consumer, error) {
+func NewRabbitMQConsumer(cfg *RabbitMQConfig) (Consumer, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config is empty")
+	}
 	err := checkConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
+	client, err := newRabbitMQClient(cfg.Url, cfg.Connect)
 
-	client, err := newRabbitMQClient(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	consumer := &RabbitMQConsumer{client: client}
-	if cfg == nil {
-		return consumer, nil
-	}
-	consumer.queueName = cfg.QueueName
-	consumer.exchange = cfg.Exchange
-	consumer.kind = cfg.Kind
-	consumer.routingKey = cfg.RoutingKey
-	if consumer.kind == "" {
-		consumer.kind = "topic"
-	}
-
-	return consumer, nil
+	return &RabbitMQConsumer{
+		client: client,
+		cfg:    cfg,
+	}, nil
 }
 
 func (c *RabbitMQConsumer) getChannel() (*amqp.Channel, error) {
-	channel, err := c.client.getChannel()
+	channel, queue, err := getChannel(c.client, c.cfg)
 	if err != nil {
 		return nil, err
 	}
-
-	if err = channel.ExchangeDeclare(
-		c.exchange, // name
-		c.kind,     // type
-		true,       // durable
-		false,      // auto-deleted
-		false,      // internal
-		false,      // no-wait
-		nil,        // arguments
-	); err != nil {
-		return channel, fmt.Errorf("failed to declare an exchange: %w", err)
-	}
-
-	q, err := channel.QueueDeclare(
-		c.queueName, // name
-		true,        // durable
-		false,       // delete when unused
-		false,       // exclusive
-		false,       // no-wait
-		nil,         // arguments
-	)
-	if err != nil {
-		return channel, fmt.Errorf("failed to declare a queue: %w", err)
+	if queue == nil {
+		return channel, nil
 	}
 
 	if err := channel.QueueBind(
-		q.Name,
-		c.routingKey,
-		c.exchange,
+		queue.Name,
+		c.cfg.RoutingKey,
+		c.cfg.Exchange,
 		false,
 		nil,
 	); err != nil {
@@ -379,16 +376,16 @@ func (c *RabbitMQConsumer) Start(handler ConsumerHandler) error {
 	goroutines.GoAsync(func(params ...interface{}) {
 		for {
 			msgs, err := channel.Consume(
-				c.queueName, // queue
-				"",          // consumer
-				false,       // auto-ack
-				false,       // exclusive
-				false,       // no-local
-				false,       // no-wait
-				nil,         // args
+				c.cfg.QueueName, // queue
+				"",              // consumer
+				false,           // auto-ack
+				false,           // exclusive
+				false,           // no-local
+				false,           // no-wait
+				nil,             // args
 			)
 			if err != nil {
-				fmt.Printf("failed to register a consumer: %w", err)
+				fmt.Printf("failed to register a consumer: %v", err)
 				channel, _ = c.getChannel() //出现错误，重新声明队列
 				continue
 			}
@@ -401,7 +398,21 @@ func (c *RabbitMQConsumer) Start(handler ConsumerHandler) error {
 						ctx = tc.RabbitMQConsumer(ctx, d.Headers)
 					}
 				}
-				if err := handler(ctx, d.MessageId, d.Body); err == nil {
+				var headers http.Header
+				if len(d.Headers) > 0 {
+					headers = make(http.Header)
+					for k, v := range d.Headers {
+						headers.Set(k, conv.String(v))
+					}
+				}
+
+				event := &Event{
+					Id:        d.MessageId,
+					Timestamp: d.Timestamp,
+					Headers:   headers,
+					Payload:   d.Body,
+				}
+				if err := handler(ctx, event); err == nil {
 					_ = d.Ack(false)
 				} else {
 					log.Println(err, "Failed to handle message", "rabbitmq")

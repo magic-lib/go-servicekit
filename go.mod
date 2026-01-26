@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/magic-lib/go-plat-cache v1.20250722.3-0.20251206132909-738f1415c8d5
 	github.com/magic-lib/go-plat-retry v1.20250604.1
-	github.com/magic-lib/go-plat-utils v1.20251105.2-0.20260122125423-5ebdc809dace
+	github.com/magic-lib/go-plat-utils v1.20251105.2-0.20260126034925-59022091b6e6
 	github.com/magic-lib/go-servicekit/tracer v0.0.0-20260103042030-eb66ca853427
 	github.com/orcaman/concurrent-map/v2 v2.0.1
 	github.com/samber/lo v1.52.0

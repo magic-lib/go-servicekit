@@ -1,7 +1,46 @@
 version: '3.9'
 
 
+#docker run -d \
+#  --name rabbitmq \
+#  --restart always \
+#  -e RABBITMQ_DEFAULT_USER="root" \
+#  -e RABBITMQ_DEFAULT_PASS="mjhttyryt565-jyjh5824t-p55w" \
+#  -e RABBITMQ_DEFAULT_VHOST="/" \
+#  -p 5672:5672 \
+#  -p 15672:15672 \
+#  --expose 5672 \
+#  --expose 15672 \
+#  -v $(pwd)/rabbitmq/data:/var/lib/rabbitmq \
+#  --health-cmd="rabbitmqctl status" \
+#  --health-interval=30s \
+#  --health-timeout=10s \
+#  --health-retries=5 \
+#  rabbitmq:3.13-management-alpine;
+
 services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: always
+    environment:
+      # 配置默认用户和密码（生产环境建议修改）
+      RABBITMQ_DEFAULT_USER: "root"
+      RABBITMQ_DEFAULT_PASS: "mjhttyryt565-jyjh5824t-p55w"
+      RABBITMQ_DEFAULT_VHOST: /  # 默认虚拟主机
+    ports:
+      - "5672:5672" # AMQP协议端口（应用程序连接）
+      - "15672:15672" # 管理界面端口（Web访问）
+    expose:
+      - "5672" # AMQP协议端口（应用程序连接）
+      - "15672" # 管理界面端口（Web访问）
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   rabbitmq1:
     image: rabbitmq:3.13-management-alpine
     container_name: rabbitmq1
@@ -16,7 +55,7 @@ services:
       RABBITMQ_NODE_NAME: rabbit@rabbitmq1
       RABBITMQ_CLUSTER_NODES: rabbit@rabbitmq2
     ports:
-      - "15670:5672" # AMQP协议端口（应用程序连接）
+      - "5672:5672" # AMQP协议端口（应用程序连接）
       - "15672:15672" # 管理界面端口（Web访问）
     expose:
       - "5672" # AMQP协议端口（应用程序连接）

@@ -285,8 +285,8 @@ github.com/magic-lib/go-plat-retry v1.20250604.1 h1:GMyCFQbWfXyQBLOUvEqU/pxhOmj4
 github.com/magic-lib/go-plat-retry v1.20250604.1/go.mod h1:fxZ33y3Q/CPi+zbrz1ZEmUB2eJuYtLiaPY6Ch2FakCs=
 github.com/magic-lib/go-plat-startupcfg v1.20250423.1 h1:ImJhuCJae/NyhAaXLgHSExg9LjAXjIdAC55uhZXXVZg=
 github.com/magic-lib/go-plat-startupcfg v1.20250423.1/go.mod h1:9CzmuWfcRjaFHORPe8n22MYWyg7F6nDdJctSRy1j6MQ=
-github.com/magic-lib/go-plat-utils v1.20251105.2-0.20260122125423-5ebdc809dace h1:78wE8yVUWif8VRdkIXbdeUjmlHSz+W0QAqn9crovSUY=
-github.com/magic-lib/go-plat-utils v1.20251105.2-0.20260122125423-5ebdc809dace/go.mod h1:SYgsIRoS7TQPcqJhOKDjUIpYVJe6jHfa2fKPRgrymlc=
+github.com/magic-lib/go-plat-utils v1.20251105.2-0.20260126034925-59022091b6e6 h1:YwIZ9IMEQ1oT+o8OMnPZ2MQmKkmKRfZlNOnUZ8q2dUg=
+github.com/magic-lib/go-plat-utils v1.20251105.2-0.20260126034925-59022091b6e6/go.mod h1:SYgsIRoS7TQPcqJhOKDjUIpYVJe6jHfa2fKPRgrymlc=
 github.com/magic-lib/go-servicekit/tracer v0.0.0-20260103042030-eb66ca853427 h1:Tq5bp6NJtjYDCxfk8HItRuZH8ZKO9TC3ZjVF2hECJHk=
 github.com/magic-lib/go-servicekit/tracer v0.0.0-20260103042030-eb66ca853427/go.mod h1:WNDUESZPccEHXCJQ54IG6k9Hy8BSSMWk31f7j17QqoQ=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=

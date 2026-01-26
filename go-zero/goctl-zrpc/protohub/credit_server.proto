@@ -1,0 +1,1542 @@
+syntax = "proto3";
+
+package creditpb;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package ="./creditpb";
+
+// ------------------------------------ 
+// Messages
+// ------------------------------------ 
+
+//--------------------------------账户信息表--------------------------------
+message Account {
+  int64 account_id = 1; //账户ID
+  int64 member_id = 2; //关联member表id
+  int64 provider_id = 3; //关联提供商provide表id
+  string surname = 4; //姓-api查询
+  string firstname = 5; //名-api查询
+  google.protobuf.Timestamp reg_time = 6; //注册时间-api查询
+  string nid = 7; //用户唯一标识nid-api查询
+  string account_no = 8; //账号具体的值
+  int32 account_type = 9; //0-mobile, 1-bank, 2-email
+  int32 source = 10; //账户来源0-未确定，1-白名单 2-自绑定，3-KYC获取，4-信审客服添加
+  int32 wallet_type = 11; //同一个provider的不同卡类型：0-未确定，1-电子钱包，2-银行卡
+  bool is_self = 12; //是否属于自己的账号
+  bool is_default = 13; //是否默认收款号码
+  string extend_properties = 14; //扩展属性
+  int32 status = 15; //状态(0无效 1有效 2姓名待确认 3需提供证件)
+  string remark = 16; //变更原因
+  google.protobuf.Timestamp create_time = 17; //创建时间
+  google.protobuf.Timestamp update_time = 18; //更新时间
+}
+
+message InsertAccountReq {
+  Account account = 1; //account
+}
+
+message InsertAccountResp {
+}
+
+message UpdateAccountReq {
+  Account account = 1; //account
+}
+
+message UpdateAccountResp {
+}
+
+message DelAccountReq {
+  int64 id = 1; //id
+}
+
+message DelAccountResp {
+}
+
+message FindAccountByIdReq {
+  int64 id = 1; //id
+}
+
+message FindAccountByIdResp {
+  Account account = 1; //account
+}
+
+message ListAccountReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 account_id = 3; //账户ID
+  int64 member_id = 4; //关联member表id
+  int64 provider_id = 5; //关联提供商provide表id
+  string surname = 6; //姓-api查询
+  string firstname = 7; //名-api查询
+  google.protobuf.Timestamp reg_time = 8; //注册时间-api查询
+  string nid = 9; //用户唯一标识nid-api查询
+  string account_no = 10; //账号具体的值
+  int32 account_type = 11; //0-mobile, 1-bank, 2-email
+  int32 source = 12; //账户来源0-未确定，1-白名单 2-自绑定，3-KYC获取，4-信审客服添加
+  int32 wallet_type = 13; //同一个provider的不同卡类型：0-未确定，1-电子钱包，2-银行卡
+  bool is_self = 14; //是否属于自己的账号
+  bool is_default = 15; //是否默认收款号码
+  string extend_properties = 16; //扩展属性
+  int32 status = 17; //状态(0无效 1有效 2姓名待确认 3需提供证件)
+  string remark = 18; //变更原因
+  google.protobuf.Timestamp create_time = 19; //创建时间
+  google.protobuf.Timestamp update_time = 20; //更新时间
+}
+
+message ListAccountResp {
+  repeated Account account = 1; //account
+}
+
+//--------------------------------授信额流水表--------------------------------
+message AffordabilityStatement {
+  int64 affordability_statement_id = 1; //affordability_statement_id
+  int64 member_id = 2; //关联member_id
+  double affordability = 3; //授信额
+  google.protobuf.Timestamp create_time = 4; //创建时间
+  google.protobuf.Timestamp update_time = 5; //更新时间
+}
+
+message InsertAffordabilityStatementReq {
+  AffordabilityStatement affordability_statement = 1; //affordability_statement
+}
+
+message InsertAffordabilityStatementResp {
+}
+
+message UpdateAffordabilityStatementReq {
+  AffordabilityStatement affordability_statement = 1; //affordability_statement
+}
+
+message UpdateAffordabilityStatementResp {
+}
+
+message DelAffordabilityStatementReq {
+  int64 id = 1; //id
+}
+
+message DelAffordabilityStatementResp {
+}
+
+message FindAffordabilityStatementByIdReq {
+  int64 id = 1; //id
+}
+
+message FindAffordabilityStatementByIdResp {
+  AffordabilityStatement affordability_statement = 1; //affordability_statement
+}
+
+message ListAffordabilityStatementReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 affordability_statement_id = 3; //affordability_statement_id
+  int64 member_id = 4; //关联member_id
+  double affordability = 5; //授信额
+  google.protobuf.Timestamp create_time = 6; //创建时间
+  google.protobuf.Timestamp update_time = 7; //更新时间
+}
+
+message ListAffordabilityStatementResp {
+  repeated AffordabilityStatement affordability_statement = 1; //affordability_statement
+}
+
+//--------------------------------代理人表--------------------------------
+message Agent {
+  int64 agent_id = 1; //代理表自增id
+  int64 user_id = 2; //对应来源系统的用户id
+  string account_no = 3; //代理人手机号（登录手机号）,用户发佣金
+  string surname = 4; //姓-api查询
+  string firstname = 5; //名-api查询
+  string agent_type = 6; //代理类型1.普通分享连接2-推广博主
+  string promotion_code = 7; //推广code
+  string extend_properties = 8; //扩展属性
+  google.protobuf.Timestamp create_time = 9; //创建时间
+  google.protobuf.Timestamp update_time = 10; //更新时间
+}
+
+message InsertAgentReq {
+  Agent agent = 1; //agent
+}
+
+message InsertAgentResp {
+}
+
+message UpdateAgentReq {
+  Agent agent = 1; //agent
+}
+
+message UpdateAgentResp {
+}
+
+message DelAgentReq {
+  int64 id = 1; //id
+}
+
+message DelAgentResp {
+}
+
+message FindAgentByIdReq {
+  int64 id = 1; //id
+}
+
+message FindAgentByIdResp {
+  Agent agent = 1; //agent
+}
+
+message ListAgentReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 agent_id = 3; //代理表自增id
+  int64 user_id = 4; //对应来源系统的用户id
+  string account_no = 5; //代理人手机号（登录手机号）,用户发佣金
+  string surname = 6; //姓-api查询
+  string firstname = 7; //名-api查询
+  string agent_type = 8; //代理类型1.普通分享连接2-推广博主
+  string promotion_code = 9; //推广code
+  string extend_properties = 10; //扩展属性
+  google.protobuf.Timestamp create_time = 11; //创建时间
+  google.protobuf.Timestamp update_time = 12; //更新时间
+}
+
+message ListAgentResp {
+  repeated Agent agent = 1; //agent
+}
+
+//--------------------------------代理日志表：记录某个agent_id(agent表)是某个member_id的代理。--------------------------------
+message AgentLog {
+  int64 agent_log_id = 1; //agent_log_id
+  int64 agent_id = 2; //代理id（member_agent表）
+  int64 user_id = 3; //被代理人user_id
+  string remark = 4; //描述
+  google.protobuf.Timestamp create_time = 5; //创建时间
+  google.protobuf.Timestamp update_time = 6; //更新时间
+}
+
+message InsertAgentLogReq {
+  AgentLog agent_log = 1; //agent_log
+}
+
+message InsertAgentLogResp {
+}
+
+message UpdateAgentLogReq {
+  AgentLog agent_log = 1; //agent_log
+}
+
+message UpdateAgentLogResp {
+}
+
+message DelAgentLogReq {
+  int64 id = 1; //id
+}
+
+message DelAgentLogResp {
+}
+
+message FindAgentLogByIdReq {
+  int64 id = 1; //id
+}
+
+message FindAgentLogByIdResp {
+  AgentLog agent_log = 1; //agent_log
+}
+
+message ListAgentLogReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 agent_log_id = 3; //agent_log_id
+  int64 agent_id = 4; //代理id（member_agent表）
+  int64 user_id = 5; //被代理人user_id
+  string remark = 6; //描述
+  google.protobuf.Timestamp create_time = 7; //创建时间
+  google.protobuf.Timestamp update_time = 8; //更新时间
+}
+
+message ListAgentLogResp {
+  repeated AgentLog agent_log = 1; //agent_log
+}
+
+//--------------------------------黑名单表--------------------------------
+message BlackList {
+  int64 black_id = 1; //black_id
+  string nid = 2; //nid
+  string source_action = 3; //来源动作场景(机审/人审/人工添加等) BotReview/CreditReview/Add Manully
+  string source_type = 4; //来源类型:人工(manual)，决策(system)，app
+  string source_remark = 5; //来源内容
+  google.protobuf.Timestamp start_time = 6; //开始时间
+  google.protobuf.Timestamp end_time = 7; //结束时间
+  google.protobuf.Timestamp create_time = 8; //创建时间
+  google.protobuf.Timestamp update_time = 9; //更新时间
+}
+
+message InsertBlackListReq {
+  BlackList black_list = 1; //black_list
+}
+
+message InsertBlackListResp {
+}
+
+message UpdateBlackListReq {
+  BlackList black_list = 1; //black_list
+}
+
+message UpdateBlackListResp {
+}
+
+message DelBlackListReq {
+  int64 id = 1; //id
+}
+
+message DelBlackListResp {
+}
+
+message FindBlackListByIdReq {
+  int64 id = 1; //id
+}
+
+message FindBlackListByIdResp {
+  BlackList black_list = 1; //black_list
+}
+
+message ListBlackListReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 black_id = 3; //black_id
+  string nid = 4; //nid
+  string source_action = 5; //来源动作场景(机审/人审/人工添加等) BotReview/CreditReview/Add Manully
+  string source_type = 6; //来源类型:人工(manual)，决策(system)，app
+  string source_remark = 7; //来源内容
+  google.protobuf.Timestamp start_time = 8; //开始时间
+  google.protobuf.Timestamp end_time = 9; //结束时间
+  google.protobuf.Timestamp create_time = 10; //创建时间
+  google.protobuf.Timestamp update_time = 11; //更新时间
+}
+
+message ListBlackListResp {
+  repeated BlackList black_list = 1; //black_list
+}
+
+//--------------------------------代理人发放佣金记录表--------------------------------
+message Commission {
+  int64 commission_id = 1; //commission_id
+  int64 agent_id = 2; //代理ID
+  int64 account_id = 3; //账户ID
+  int64 user_id = 4; //关联user表id
+  string agent_account_no = 5; //代理手机号
+  string account_type = 6; //手机钱包类型 airtel/mtn
+  int64 member_id = 7; //被邀请人ID
+  string surname = 8; //姓-api查询
+  string firstname = 9; //名-api查询
+  string order_no = 10; //佣金关联订单号
+  string commission_type = 11; //佣金类型 default-默认佣金 
+  double amount = 12; //佣金金额
+  int32 pay_status = 13; //佣金支付状态 0-待支付 1-支付中 2-支付成功 3-支付失败
+  string pay_no = 14; //在线支付单号 MD5(佣金id+手机号+时间)戳  取16位长度值
+  google.protobuf.Timestamp pay_submit_time = 15; //提交支付时间
+  google.protobuf.Timestamp pay_succ_time = 16; //佣金支付成功时间
+  string serial_no = 17; //银行支付流水号
+  string extend_properties = 18; //扩展属性
+  google.protobuf.Timestamp create_time = 19; //创建时间
+  google.protobuf.Timestamp update_time = 20; //更新时间
+}
+
+message InsertCommissionReq {
+  Commission commission = 1; //commission
+}
+
+message InsertCommissionResp {
+}
+
+message UpdateCommissionReq {
+  Commission commission = 1; //commission
+}
+
+message UpdateCommissionResp {
+}
+
+message DelCommissionReq {
+  int64 id = 1; //id
+}
+
+message DelCommissionResp {
+}
+
+message FindCommissionByIdReq {
+  int64 id = 1; //id
+}
+
+message FindCommissionByIdResp {
+  Commission commission = 1; //commission
+}
+
+message ListCommissionReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 commission_id = 3; //commission_id
+  int64 agent_id = 4; //代理ID
+  int64 account_id = 5; //账户ID
+  int64 user_id = 6; //关联user表id
+  string agent_account_no = 7; //代理手机号
+  string account_type = 8; //手机钱包类型 airtel/mtn
+  int64 member_id = 9; //被邀请人ID
+  string surname = 10; //姓-api查询
+  string firstname = 11; //名-api查询
+  string order_no = 12; //佣金关联订单号
+  string commission_type = 13; //佣金类型 default-默认佣金 
+  double amount = 14; //佣金金额
+  int32 pay_status = 15; //佣金支付状态 0-待支付 1-支付中 2-支付成功 3-支付失败
+  string pay_no = 16; //在线支付单号 MD5(佣金id+手机号+时间)戳  取16位长度值
+  google.protobuf.Timestamp pay_submit_time = 17; //提交支付时间
+  google.protobuf.Timestamp pay_succ_time = 18; //佣金支付成功时间
+  string serial_no = 19; //银行支付流水号
+  string extend_properties = 20; //扩展属性
+  google.protobuf.Timestamp create_time = 21; //创建时间
+  google.protobuf.Timestamp update_time = 22; //更新时间
+}
+
+message ListCommissionResp {
+  repeated Commission commission = 1; //commission
+}
+
+//--------------------------------联系人表--------------------------------
+message Contact {
+  int64 contact_id = 1; //contact_id
+  int64 member_id = 2; //member_id
+  int64 user_id = 3; //关联user表id
+  string contact_type = 4; //联系人类型：家人，同事，邻居，用文本描述
+  string relation = 5; //关系：父母、兄弟、姐妹、公司里上下级
+  string surname = 6; //姓
+  string firstname = 7; //名
+  string nid = 8; //nid
+  string mobile = 9; //手机号
+  string address = 10; //地址
+  int32 source = 11; //账户来源：0-未确定，2-自绑定NOK填写，4-信审客服添加
+  string remark = 12; //联系人备注信息
+  string extend_properties = 13; //扩展字段
+  string extend_checked_info = 14; //调用接口核验名称
+  google.protobuf.Timestamp create_time = 15; //创建时间
+  google.protobuf.Timestamp update_time = 16; //更新时间
+}
+
+message InsertContactReq {
+  Contact contact = 1; //contact
+}
+
+message InsertContactResp {
+}
+
+message UpdateContactReq {
+  Contact contact = 1; //contact
+}
+
+message UpdateContactResp {
+}
+
+message DelContactReq {
+  int64 id = 1; //id
+}
+
+message DelContactResp {
+}
+
+message FindContactByIdReq {
+  int64 id = 1; //id
+}
+
+message FindContactByIdResp {
+  Contact contact = 1; //contact
+}
+
+message ListContactReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 contact_id = 3; //contact_id
+  int64 member_id = 4; //member_id
+  int64 user_id = 5; //关联user表id
+  string contact_type = 6; //联系人类型：家人，同事，邻居，用文本描述
+  string relation = 7; //关系：父母、兄弟、姐妹、公司里上下级
+  string surname = 8; //姓
+  string firstname = 9; //名
+  string nid = 10; //nid
+  string mobile = 11; //手机号
+  string address = 12; //地址
+  int32 source = 13; //账户来源：0-未确定，2-自绑定NOK填写，4-信审客服添加
+  string remark = 14; //联系人备注信息
+  string extend_properties = 15; //扩展字段
+  string extend_checked_info = 16; //调用接口核验名称
+  google.protobuf.Timestamp create_time = 17; //创建时间
+  google.protobuf.Timestamp update_time = 18; //更新时间
+}
+
+message ListContactResp {
+  repeated Contact contact = 1; //contact
+}
+
+//--------------------------------globalCache--------------------------------
+message GlobalCache {
+  string namespace = 1; //namespace
+  string cache_key = 2; //cache_key
+  string cache_value = 3; //cache_value
+  google.protobuf.Timestamp expire_time = 4; //expire_time
+  google.protobuf.Timestamp create_time = 5; //create_time
+  google.protobuf.Timestamp update_time = 6; //update_time
+}
+
+message InsertGlobalCacheReq {
+  GlobalCache global_cache = 1; //global_cache
+}
+
+message InsertGlobalCacheResp {
+}
+
+message UpdateGlobalCacheReq {
+  GlobalCache global_cache = 1; //global_cache
+}
+
+message UpdateGlobalCacheResp {
+}
+
+message DelGlobalCacheReq {
+  int64 id = 1; //id
+}
+
+message DelGlobalCacheResp {
+}
+
+message FindGlobalCacheByIdReq {
+  int64 id = 1; //id
+}
+
+message FindGlobalCacheByIdResp {
+  GlobalCache global_cache = 1; //global_cache
+}
+
+message ListGlobalCacheReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  string namespace = 3; //namespace
+  string cache_key = 4; //cache_key
+  string cache_value = 5; //cache_value
+  google.protobuf.Timestamp expire_time = 6; //expire_time
+  google.protobuf.Timestamp create_time = 7; //create_time
+  google.protobuf.Timestamp update_time = 8; //update_time
+}
+
+message ListGlobalCacheResp {
+  repeated GlobalCache global_cache = 1; //global_cache
+}
+
+//--------------------------------授信分组表--------------------------------
+message GroupInfo {
+  int64 group_id = 1; //group_id
+  int64 project_id = 2; //项目id
+  string group_name = 3; //分组名称
+  int32 priorty = 4; //排序，优先级
+  string remark = 5; //备注
+  google.protobuf.Timestamp create_time = 6; //创建时间
+  google.protobuf.Timestamp update_time = 7; //更新时间
+}
+
+message InsertGroupInfoReq {
+  GroupInfo group_info = 1; //group_info
+}
+
+message InsertGroupInfoResp {
+}
+
+message UpdateGroupInfoReq {
+  GroupInfo group_info = 1; //group_info
+}
+
+message UpdateGroupInfoResp {
+}
+
+message DelGroupInfoReq {
+  int64 id = 1; //id
+}
+
+message DelGroupInfoResp {
+}
+
+message FindGroupInfoByIdReq {
+  int64 id = 1; //id
+}
+
+message FindGroupInfoByIdResp {
+  GroupInfo group_info = 1; //group_info
+}
+
+message ListGroupInfoReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 group_id = 3; //group_id
+  int64 project_id = 4; //项目id
+  string group_name = 5; //分组名称
+  int32 priorty = 6; //排序，优先级
+  string remark = 7; //备注
+  google.protobuf.Timestamp create_time = 8; //创建时间
+  google.protobuf.Timestamp update_time = 9; //更新时间
+}
+
+message ListGroupInfoResp {
+  repeated GroupInfo group_info = 1; //group_info
+}
+
+//--------------------------------登录日志表--------------------------------
+message LogInfo {
+  int64 log_id = 1; //log_id
+  int32 log_type = 2; //日志类型，0 登录日志
+  int64 account_id = 3; //关联 account 表的id
+  int64 user_id = 4; //关联user表(sys模块)id
+  string ip = 5; //登录ip地址
+  string remark = 6; //扩展字段
+  google.protobuf.Timestamp create_time = 7; //创建时间
+  google.protobuf.Timestamp update_time = 8; //更新时间
+}
+
+message InsertLogInfoReq {
+  LogInfo log_info = 1; //log_info
+}
+
+message InsertLogInfoResp {
+}
+
+message UpdateLogInfoReq {
+  LogInfo log_info = 1; //log_info
+}
+
+message UpdateLogInfoResp {
+}
+
+message DelLogInfoReq {
+  int64 id = 1; //id
+}
+
+message DelLogInfoResp {
+}
+
+message FindLogInfoByIdReq {
+  int64 id = 1; //id
+}
+
+message FindLogInfoByIdResp {
+  LogInfo log_info = 1; //log_info
+}
+
+message ListLogInfoReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 log_id = 3; //log_id
+  int32 log_type = 4; //日志类型，0 登录日志
+  int64 account_id = 5; //关联 account 表的id
+  int64 user_id = 6; //关联user表(sys模块)id
+  string ip = 7; //登录ip地址
+  string remark = 8; //扩展字段
+  google.protobuf.Timestamp create_time = 9; //创建时间
+  google.protobuf.Timestamp update_time = 10; //更新时间
+}
+
+message ListLogInfoResp {
+  repeated LogInfo log_info = 1; //log_info
+}
+
+//--------------------------------自然人表--------------------------------
+message Member {
+  int64 member_id = 1; //member_id
+  string country_code = 2; //所属国家编号
+  string nid = 3; //用户唯一标识nid
+  string surname = 4; //姓
+  string firstname = 5; //名
+  int32 gender = 6; //性别0 未设置 1男 2女
+  google.protobuf.Timestamp birthday = 7; //出生日期
+  int32 status = 8; //0 未验证1 正常用户 2 已删除
+  google.protobuf.Timestamp create_time = 9; //创建时间
+  google.protobuf.Timestamp update_time = 10; //更新时间
+}
+
+message InsertMemberReq {
+  Member member = 1; //member
+}
+
+message InsertMemberResp {
+}
+
+message UpdateMemberReq {
+  Member member = 1; //member
+}
+
+message UpdateMemberResp {
+}
+
+message DelMemberReq {
+  int64 id = 1; //id
+}
+
+message DelMemberResp {
+}
+
+message FindMemberByIdReq {
+  int64 id = 1; //id
+}
+
+message FindMemberByIdResp {
+  Member member = 1; //member
+}
+
+message ListMemberReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 member_id = 3; //member_id
+  string country_code = 4; //所属国家编号
+  string nid = 5; //用户唯一标识nid
+  string surname = 6; //姓
+  string firstname = 7; //名
+  int32 gender = 8; //性别0 未设置 1男 2女
+  google.protobuf.Timestamp birthday = 9; //出生日期
+  int32 status = 10; //0 未验证1 正常用户 2 已删除
+  google.protobuf.Timestamp create_time = 11; //创建时间
+  google.protobuf.Timestamp update_time = 12; //更新时间
+}
+
+message ListMemberResp {
+  repeated Member member = 1; //member
+}
+
+//--------------------------------项目表--------------------------------
+message Project {
+  int64 project_id = 1; //project_id
+  string project_name = 2; //项目名称
+  string remark = 3; //备注
+  google.protobuf.Timestamp create_time = 4; //创建时间
+  google.protobuf.Timestamp update_time = 5; //更新时间
+}
+
+message InsertProjectReq {
+  Project project = 1; //project
+}
+
+message InsertProjectResp {
+}
+
+message UpdateProjectReq {
+  Project project = 1; //project
+}
+
+message UpdateProjectResp {
+}
+
+message DelProjectReq {
+  int64 id = 1; //id
+}
+
+message DelProjectResp {
+}
+
+message FindProjectByIdReq {
+  int64 id = 1; //id
+}
+
+message FindProjectByIdResp {
+  Project project = 1; //project
+}
+
+message ListProjectReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 project_id = 3; //project_id
+  string project_name = 4; //项目名称
+  string remark = 5; //备注
+  google.protobuf.Timestamp create_time = 6; //创建时间
+  google.protobuf.Timestamp update_time = 7; //更新时间
+}
+
+message ListProjectResp {
+  repeated Project project = 1; //project
+}
+
+//--------------------------------账号归属表--------------------------------
+message Provider {
+  int64 provider_id = 1; //provider_id
+  string country_code = 2; //所属国家编号
+  string provider_name = 3; //账号类型名称
+  int32 provider_type = 4; //账号类型（mobile,bank,email）
+  string bank_branch = 5; //银行编码(分行号转账非必须)
+  string extend_properties = 6; //账号可能需要调用的验证参数等额外参数
+  string remark = 7; //备注说明
+  google.protobuf.Timestamp create_time = 8; //创建时间
+  google.protobuf.Timestamp update_time = 9; //更新时间
+}
+
+message InsertProviderReq {
+  Provider provider = 1; //provider
+}
+
+message InsertProviderResp {
+}
+
+message UpdateProviderReq {
+  Provider provider = 1; //provider
+}
+
+message UpdateProviderResp {
+}
+
+message DelProviderReq {
+  int64 id = 1; //id
+}
+
+message DelProviderResp {
+}
+
+message FindProviderByIdReq {
+  int64 id = 1; //id
+}
+
+message FindProviderByIdResp {
+  Provider provider = 1; //provider
+}
+
+message ListProviderReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 provider_id = 3; //provider_id
+  string country_code = 4; //所属国家编号
+  string provider_name = 5; //账号类型名称
+  int32 provider_type = 6; //账号类型（mobile,bank,email）
+  string bank_branch = 7; //银行编码(分行号转账非必须)
+  string extend_properties = 8; //账号可能需要调用的验证参数等额外参数
+  string remark = 9; //备注说明
+  google.protobuf.Timestamp create_time = 10; //创建时间
+  google.protobuf.Timestamp update_time = 11; //更新时间
+}
+
+message ListProviderResp {
+  repeated Provider provider = 1; //provider
+}
+
+//--------------------------------系统使用：系统rpc重试表--------------------------------
+message RetryTable {
+  int64 id = 1; //id
+  string namespace = 2; //namespace
+  string retry_type = 3; //retry_type
+  string param = 4; //param
+  string extend = 5; //extend
+  string errors = 6; //errors
+  string response = 7; //response
+  int32 retries = 8; //retries
+  int32 max_retries = 9; //max_retries
+  int64 interval_second = 10; //interval_second
+  google.protobuf.Timestamp next_retry = 11; //next_retry
+  string status = 12; //status
+  google.protobuf.Timestamp create_time = 13; //create_time
+  google.protobuf.Timestamp update_time = 14; //update_time
+}
+
+message InsertRetryTableReq {
+  RetryTable retry_table = 1; //retry_table
+}
+
+message InsertRetryTableResp {
+}
+
+message UpdateRetryTableReq {
+  RetryTable retry_table = 1; //retry_table
+}
+
+message UpdateRetryTableResp {
+}
+
+message DelRetryTableReq {
+  int64 id = 1; //id
+}
+
+message DelRetryTableResp {
+}
+
+message FindRetryTableByIdReq {
+  int64 id = 1; //id
+}
+
+message FindRetryTableByIdResp {
+  RetryTable retry_table = 1; //retry_table
+}
+
+message ListRetryTableReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 id = 3; //id
+  string namespace = 4; //namespace
+  string retry_type = 5; //retry_type
+  string param = 6; //param
+  string extend = 7; //extend
+  string errors = 8; //errors
+  string response = 9; //response
+  int32 retries = 10; //retries
+  int32 max_retries = 11; //max_retries
+  int64 interval_second = 12; //interval_second
+  google.protobuf.Timestamp next_retry = 13; //next_retry
+  string status = 14; //status
+  google.protobuf.Timestamp create_time = 15; //create_time
+  google.protobuf.Timestamp update_time = 16; //update_time
+}
+
+message ListRetryTableResp {
+  repeated RetryTable retry_table = 1; //retry_table
+}
+
+//--------------------------------工资流水表--------------------------------
+message SalaryStatement {
+  int64 salary_statement_id = 1; //salary_statement_id
+  int64 subject_id = 2; //subject_id
+  int64 member_id = 3; //关联member_id
+  int32 salary_month = 4; //工资月份
+  double total_gross = 5; //总收入
+  double basic_salary = 6; //基本工资
+  double netpay = 7; //实发工资
+  google.protobuf.Timestamp create_time = 8; //创建时间
+  google.protobuf.Timestamp update_time = 9; //更新时间
+}
+
+message InsertSalaryStatementReq {
+  SalaryStatement salary_statement = 1; //salary_statement
+}
+
+message InsertSalaryStatementResp {
+}
+
+message UpdateSalaryStatementReq {
+  SalaryStatement salary_statement = 1; //salary_statement
+}
+
+message UpdateSalaryStatementResp {
+}
+
+message DelSalaryStatementReq {
+  int64 id = 1; //id
+}
+
+message DelSalaryStatementResp {
+}
+
+message FindSalaryStatementByIdReq {
+  int64 id = 1; //id
+}
+
+message FindSalaryStatementByIdResp {
+  SalaryStatement salary_statement = 1; //salary_statement
+}
+
+message ListSalaryStatementReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 salary_statement_id = 3; //salary_statement_id
+  int64 subject_id = 4; //subject_id
+  int64 member_id = 5; //关联member_id
+  int32 salary_month = 6; //工资月份
+  double total_gross = 7; //总收入
+  double basic_salary = 8; //基本工资
+  double netpay = 9; //实发工资
+  google.protobuf.Timestamp create_time = 10; //创建时间
+  google.protobuf.Timestamp update_time = 11; //更新时间
+}
+
+message ListSalaryStatementResp {
+  repeated SalaryStatement salary_statement = 1; //salary_statement
+}
+
+//--------------------------------静态资源表-上传记录--------------------------------
+message StaticResource {
+  int64 static_resource_id = 1; //static_resource_id
+  string uuid = 2; //资源uuid
+  string file_path = 3; //文件路径
+  string filename = 4; //文件名
+  string origin_filename = 5; //原始文件名
+  string file_ext = 6; //文件扩展名（不含点,小写）
+  string storage_mode = 7; //存储方式local-本地,cloud-云存储
+  string uploader_name = 8; //上传人名称
+  string md5 = 9; //文件MD5值
+  string extra_properties = 10; //扩展字段（JSON格式）
+  string remark = 11; //备注信息
+  google.protobuf.Timestamp create_time = 12; //创建时间
+  google.protobuf.Timestamp update_time = 13; //更新时间
+}
+
+message InsertStaticResourceReq {
+  StaticResource static_resource = 1; //static_resource
+}
+
+message InsertStaticResourceResp {
+}
+
+message UpdateStaticResourceReq {
+  StaticResource static_resource = 1; //static_resource
+}
+
+message UpdateStaticResourceResp {
+}
+
+message DelStaticResourceReq {
+  int64 id = 1; //id
+}
+
+message DelStaticResourceResp {
+}
+
+message FindStaticResourceByIdReq {
+  int64 id = 1; //id
+}
+
+message FindStaticResourceByIdResp {
+  StaticResource static_resource = 1; //static_resource
+}
+
+message ListStaticResourceReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 static_resource_id = 3; //static_resource_id
+  string uuid = 4; //资源uuid
+  string file_path = 5; //文件路径
+  string filename = 6; //文件名
+  string origin_filename = 7; //原始文件名
+  string file_ext = 8; //文件扩展名（不含点,小写）
+  string storage_mode = 9; //存储方式local-本地,cloud-云存储
+  string uploader_name = 10; //上传人名称
+  string md5 = 11; //文件MD5值
+  string extra_properties = 12; //扩展字段（JSON格式）
+  string remark = 13; //备注信息
+  google.protobuf.Timestamp create_time = 14; //创建时间
+  google.protobuf.Timestamp update_time = 15; //更新时间
+}
+
+message ListStaticResourceResp {
+  repeated StaticResource static_resource = 1; //static_resource
+}
+
+//--------------------------------主体表--------------------------------
+message Subject {
+  int64 subject_id = 1; //subject_id
+  int64 group_id = 2; //该主体所在分组
+  string subject_name = 3; //主体名称
+  string subject_code = 4; //主体编号
+  int32 subject_type = 5; //主体类型：1-公司 2-公务员
+  int32 salary_day = 6; //该主体工资日
+  string subject_contact = 7; //主体联系人电话
+  bool is_upload_list = 8; //是否上传了 list（0未上传，1已上传）
+  bool is_upload_mou = 9; //是否上传了 mou（0未上传，1已上传）
+  string remark = 10; //备注
+  string extend_properties = 11; //扩展字段
+  google.protobuf.Timestamp create_time = 12; //创建时间
+  google.protobuf.Timestamp update_time = 13; //更新时间
+}
+
+message InsertSubjectReq {
+  Subject subject = 1; //subject
+}
+
+message InsertSubjectResp {
+}
+
+message UpdateSubjectReq {
+  Subject subject = 1; //subject
+}
+
+message UpdateSubjectResp {
+}
+
+message DelSubjectReq {
+  int64 id = 1; //id
+}
+
+message DelSubjectResp {
+}
+
+message FindSubjectByIdReq {
+  int64 id = 1; //id
+}
+
+message FindSubjectByIdResp {
+  Subject subject = 1; //subject
+}
+
+message ListSubjectReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 subject_id = 3; //subject_id
+  int64 group_id = 4; //该主体所在分组
+  string subject_name = 5; //主体名称
+  string subject_code = 6; //主体编号
+  int32 subject_type = 7; //主体类型：1-公司 2-公务员
+  int32 salary_day = 8; //该主体工资日
+  string subject_contact = 9; //主体联系人电话
+  bool is_upload_list = 10; //是否上传了 list（0未上传，1已上传）
+  bool is_upload_mou = 11; //是否上传了 mou（0未上传，1已上传）
+  string remark = 12; //备注
+  string extend_properties = 13; //扩展字段
+  google.protobuf.Timestamp create_time = 14; //创建时间
+  google.protobuf.Timestamp update_time = 15; //更新时间
+}
+
+message ListSubjectResp {
+  repeated Subject subject = 1; //subject
+}
+
+//--------------------------------主体小组表--------------------------------
+message SubjectTeam {
+  int64 subject_team_id = 1; //subject_team_id
+  string team_name = 2; //主体小组名称
+  int64 subject_id = 3; //关联主体
+  int32 priorty = 4; //排序
+  string extend_properties = 5; //扩展字段
+  google.protobuf.Timestamp create_time = 6; //创建时间
+  google.protobuf.Timestamp update_time = 7; //更新时间
+}
+
+message InsertSubjectTeamReq {
+  SubjectTeam subject_team = 1; //subject_team
+}
+
+message InsertSubjectTeamResp {
+}
+
+message UpdateSubjectTeamReq {
+  SubjectTeam subject_team = 1; //subject_team
+}
+
+message UpdateSubjectTeamResp {
+}
+
+message DelSubjectTeamReq {
+  int64 id = 1; //id
+}
+
+message DelSubjectTeamResp {
+}
+
+message FindSubjectTeamByIdReq {
+  int64 id = 1; //id
+}
+
+message FindSubjectTeamByIdResp {
+  SubjectTeam subject_team = 1; //subject_team
+}
+
+message ListSubjectTeamReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 subject_team_id = 3; //subject_team_id
+  string team_name = 4; //主体小组名称
+  int64 subject_id = 5; //关联主体
+  int32 priorty = 6; //排序
+  string extend_properties = 7; //扩展字段
+  google.protobuf.Timestamp create_time = 8; //创建时间
+  google.protobuf.Timestamp update_time = 9; //更新时间
+}
+
+message ListSubjectTeamResp {
+  repeated SubjectTeam subject_team = 1; //subject_team
+}
+
+//--------------------------------标签表--------------------------------
+message Tag {
+  int64 tag_id = 1; //tag_id
+  int64 user_id = 2; //关联user_info表id
+  int32 tag_type = 3; //标签类型：0-未分类，1-member，2-order，3-信审，4-催收 5-loaned 6-member_identity 7-member_group
+  string tag_name = 4; //标签
+  string tag_source = 5; //标记来源
+  string extend_properties = 6; //扩展字段
+  google.protobuf.Timestamp create_time = 7; //创建时间
+  google.protobuf.Timestamp update_time = 8; //更新时间
+}
+
+message InsertTagReq {
+  Tag tag = 1; //tag
+}
+
+message InsertTagResp {
+}
+
+message UpdateTagReq {
+  Tag tag = 1; //tag
+}
+
+message UpdateTagResp {
+}
+
+message DelTagReq {
+  int64 id = 1; //id
+}
+
+message DelTagResp {
+}
+
+message FindTagByIdReq {
+  int64 id = 1; //id
+}
+
+message FindTagByIdResp {
+  Tag tag = 1; //tag
+}
+
+message ListTagReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 tag_id = 3; //tag_id
+  int64 user_id = 4; //关联user_info表id
+  int32 tag_type = 5; //标签类型：0-未分类，1-member，2-order，3-信审，4-催收 5-loaned 6-member_identity 7-member_group
+  string tag_name = 6; //标签
+  string tag_source = 7; //标记来源
+  string extend_properties = 8; //扩展字段
+  google.protobuf.Timestamp create_time = 9; //创建时间
+  google.protobuf.Timestamp update_time = 10; //更新时间
+}
+
+message ListTagResp {
+  repeated Tag tag = 1; //tag
+}
+
+//--------------------------------小组成员表--------------------------------
+message TeamMember {
+  int64 team_member_id = 1; //team_member_id
+  int64 subject_id = 2; //关联主体
+  int64 subject_team_id = 3; //关联主体小组id
+  int64 member_id = 4; //关联member_id
+  int32 status = 5; //状态 1-有效(赋值默认1)，2-无效
+  string emp_no = 6; //工号
+  google.protobuf.Timestamp job_time = 7; //开始工作时间
+  int32 billing_day = 8; //账单日
+  google.protobuf.Timestamp contract_expiry_date = 9; //合同到期日
+  google.protobuf.Timestamp create_time = 10; //创建时间
+  google.protobuf.Timestamp update_time = 11; //更新时间
+}
+
+message InsertTeamMemberReq {
+  TeamMember team_member = 1; //team_member
+}
+
+message InsertTeamMemberResp {
+}
+
+message UpdateTeamMemberReq {
+  TeamMember team_member = 1; //team_member
+}
+
+message UpdateTeamMemberResp {
+}
+
+message DelTeamMemberReq {
+  int64 id = 1; //id
+}
+
+message DelTeamMemberResp {
+}
+
+message FindTeamMemberByIdReq {
+  int64 id = 1; //id
+}
+
+message FindTeamMemberByIdResp {
+  TeamMember team_member = 1; //team_member
+}
+
+message ListTeamMemberReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 team_member_id = 3; //team_member_id
+  int64 subject_id = 4; //关联主体
+  int64 subject_team_id = 5; //关联主体小组id
+  int64 member_id = 6; //关联member_id
+  int32 status = 7; //状态 1-有效(赋值默认1)，2-无效
+  string emp_no = 8; //工号
+  google.protobuf.Timestamp job_time = 9; //开始工作时间
+  int32 billing_day = 10; //账单日
+  google.protobuf.Timestamp contract_expiry_date = 11; //合同到期日
+  google.protobuf.Timestamp create_time = 12; //创建时间
+  google.protobuf.Timestamp update_time = 13; //更新时间
+}
+
+message ListTeamMemberResp {
+  repeated TeamMember team_member = 1; //team_member
+}
+
+//--------------------------------用户账户关系表--------------------------------
+message UserAccRelation {
+  int64 user_acc_id = 1; //user_acc_id
+  int64 user_id = 2; //关联user表id
+  int64 account_id = 3; //关联account表id
+  google.protobuf.Timestamp create_time = 4; //创建时间
+  google.protobuf.Timestamp update_time = 5; //更新时间
+}
+
+message InsertUserAccRelationReq {
+  UserAccRelation user_acc_relation = 1; //user_acc_relation
+}
+
+message InsertUserAccRelationResp {
+}
+
+message UpdateUserAccRelationReq {
+  UserAccRelation user_acc_relation = 1; //user_acc_relation
+}
+
+message UpdateUserAccRelationResp {
+}
+
+message DelUserAccRelationReq {
+  int64 id = 1; //id
+}
+
+message DelUserAccRelationResp {
+}
+
+message FindUserAccRelationByIdReq {
+  int64 id = 1; //id
+}
+
+message FindUserAccRelationByIdResp {
+  UserAccRelation user_acc_relation = 1; //user_acc_relation
+}
+
+message ListUserAccRelationReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 user_acc_id = 3; //user_acc_id
+  int64 user_id = 4; //关联user表id
+  int64 account_id = 5; //关联account表id
+  google.protobuf.Timestamp create_time = 6; //创建时间
+  google.protobuf.Timestamp update_time = 7; //更新时间
+}
+
+message ListUserAccRelationResp {
+  repeated UserAccRelation user_acc_relation = 1; //user_acc_relation
+}
+
+//--------------------------------用户表--------------------------------
+message UserInfo {
+  int64 user_id = 1; //用户ID
+  int64 project_id = 2; //项目id
+  int64 member_id = 3; //关联member表id
+  string country_code = 4; //所属国家编号
+  string surname = 5; //姓-用户填写
+  string firstname = 6; //名-用户填写
+  int32 gender = 7; //性别0未设置， 1 Male 2Female
+  string nid = 8; //nid
+  google.protobuf.Timestamp birthday = 9; //生日
+  string province = 10; //省份
+  string district = 11; //行政区
+  string address = 12; //具体地址
+  int32 sector = 13; //行业
+  int32 monthly_income_grade = 14; //月收入等级
+  int32 status = 15; //状态(0正常 1冻结 )
+  bool is_deleted = 16; //是否删除
+  int64 agent_id = 17; //推广人ID-代理ID(该注册人是谁推广的)
+  int64 promotion_id = 18; //自身推广ID
+  string extend_checked_info = 19; //信审记录详情
+  string extend_properties = 20; //扩展字段
+  google.protobuf.Timestamp reg_time = 21; //注册时间
+  google.protobuf.Timestamp create_time = 22; //创建时间
+  google.protobuf.Timestamp update_time = 23; //更新时间
+}
+
+message InsertUserInfoReq {
+  UserInfo user_info = 1; //user_info
+}
+
+message InsertUserInfoResp {
+}
+
+message UpdateUserInfoReq {
+  UserInfo user_info = 1; //user_info
+}
+
+message UpdateUserInfoResp {
+}
+
+message DelUserInfoReq {
+  int64 id = 1; //id
+}
+
+message DelUserInfoResp {
+}
+
+message FindUserInfoByIdReq {
+  int64 id = 1; //id
+}
+
+message FindUserInfoByIdResp {
+  UserInfo user_info = 1; //user_info
+}
+
+message ListUserInfoReq {
+  int64 page = 1; //page
+  int64 limit = 2; //limit
+  int64 user_id = 3; //用户ID
+  int64 project_id = 4; //项目id
+  int64 member_id = 5; //关联member表id
+  string country_code = 6; //所属国家编号
+  string surname = 7; //姓-用户填写
+  string firstname = 8; //名-用户填写
+  int32 gender = 9; //性别0未设置， 1 Male 2Female
+  string nid = 10; //nid
+  google.protobuf.Timestamp birthday = 11; //生日
+  string province = 12; //省份
+  string district = 13; //行政区
+  string address = 14; //具体地址
+  int32 sector = 15; //行业
+  int32 monthly_income_grade = 16; //月收入等级
+  int32 status = 17; //状态(0正常 1冻结 )
+  bool is_deleted = 18; //是否删除
+  int64 agent_id = 19; //推广人ID-代理ID(该注册人是谁推广的)
+  int64 promotion_id = 20; //自身推广ID
+  string extend_checked_info = 21; //信审记录详情
+  string extend_properties = 22; //扩展字段
+  google.protobuf.Timestamp reg_time = 23; //注册时间
+  google.protobuf.Timestamp create_time = 24; //创建时间
+  google.protobuf.Timestamp update_time = 25; //更新时间
+}
+
+message ListUserInfoResp {
+  repeated UserInfo user_info = 1; //user_info
+}
+
+
+
+// ------------------------------------ 
+// Rpc Func
+// ------------------------------------ 
+
+service CreditServer{ 
+
+	 //-----------------------账户信息表----------------------- 
+	 rpc InsertAccount(InsertAccountReq) returns (InsertAccountResp); 
+	 rpc UpdateAccount(UpdateAccountReq) returns (UpdateAccountResp); 
+	 rpc DelAccount(DelAccountReq) returns (DelAccountResp); 
+	 rpc FindAccountById(FindAccountByIdReq) returns (FindAccountByIdResp); 
+	 rpc ListAccount(ListAccountReq) returns (ListAccountResp); 
+	 //-----------------------授信额流水表----------------------- 
+	 rpc InsertAffordabilityStatement(InsertAffordabilityStatementReq) returns (InsertAffordabilityStatementResp); 
+	 rpc UpdateAffordabilityStatement(UpdateAffordabilityStatementReq) returns (UpdateAffordabilityStatementResp); 
+	 rpc DelAffordabilityStatement(DelAffordabilityStatementReq) returns (DelAffordabilityStatementResp); 
+	 rpc FindAffordabilityStatementById(FindAffordabilityStatementByIdReq) returns (FindAffordabilityStatementByIdResp); 
+	 rpc ListAffordabilityStatement(ListAffordabilityStatementReq) returns (ListAffordabilityStatementResp); 
+	 //-----------------------代理人表----------------------- 
+	 rpc InsertAgent(InsertAgentReq) returns (InsertAgentResp); 
+	 rpc UpdateAgent(UpdateAgentReq) returns (UpdateAgentResp); 
+	 rpc DelAgent(DelAgentReq) returns (DelAgentResp); 
+	 rpc FindAgentById(FindAgentByIdReq) returns (FindAgentByIdResp); 
+	 rpc ListAgent(ListAgentReq) returns (ListAgentResp); 
+	 //-----------------------代理日志表：记录某个agent_id(agent表)是某个member_id的代理。----------------------- 
+	 rpc InsertAgentLog(InsertAgentLogReq) returns (InsertAgentLogResp); 
+	 rpc UpdateAgentLog(UpdateAgentLogReq) returns (UpdateAgentLogResp); 
+	 rpc DelAgentLog(DelAgentLogReq) returns (DelAgentLogResp); 
+	 rpc FindAgentLogById(FindAgentLogByIdReq) returns (FindAgentLogByIdResp); 
+	 rpc ListAgentLog(ListAgentLogReq) returns (ListAgentLogResp); 
+	 //-----------------------黑名单表----------------------- 
+	 rpc InsertBlackList(InsertBlackListReq) returns (InsertBlackListResp); 
+	 rpc UpdateBlackList(UpdateBlackListReq) returns (UpdateBlackListResp); 
+	 rpc DelBlackList(DelBlackListReq) returns (DelBlackListResp); 
+	 rpc FindBlackListById(FindBlackListByIdReq) returns (FindBlackListByIdResp); 
+	 rpc ListBlackList(ListBlackListReq) returns (ListBlackListResp); 
+	 //-----------------------代理人发放佣金记录表----------------------- 
+	 rpc InsertCommission(InsertCommissionReq) returns (InsertCommissionResp); 
+	 rpc UpdateCommission(UpdateCommissionReq) returns (UpdateCommissionResp); 
+	 rpc DelCommission(DelCommissionReq) returns (DelCommissionResp); 
+	 rpc FindCommissionById(FindCommissionByIdReq) returns (FindCommissionByIdResp); 
+	 rpc ListCommission(ListCommissionReq) returns (ListCommissionResp); 
+	 //-----------------------联系人表----------------------- 
+	 rpc InsertContact(InsertContactReq) returns (InsertContactResp); 
+	 rpc UpdateContact(UpdateContactReq) returns (UpdateContactResp); 
+	 rpc DelContact(DelContactReq) returns (DelContactResp); 
+	 rpc FindContactById(FindContactByIdReq) returns (FindContactByIdResp); 
+	 rpc ListContact(ListContactReq) returns (ListContactResp); 
+	 //-----------------------globalCache----------------------- 
+	 rpc InsertGlobalCache(InsertGlobalCacheReq) returns (InsertGlobalCacheResp); 
+	 rpc UpdateGlobalCache(UpdateGlobalCacheReq) returns (UpdateGlobalCacheResp); 
+	 rpc DelGlobalCache(DelGlobalCacheReq) returns (DelGlobalCacheResp); 
+	 rpc FindGlobalCacheById(FindGlobalCacheByIdReq) returns (FindGlobalCacheByIdResp); 
+	 rpc ListGlobalCache(ListGlobalCacheReq) returns (ListGlobalCacheResp); 
+	 //-----------------------授信分组表----------------------- 
+	 rpc InsertGroupInfo(InsertGroupInfoReq) returns (InsertGroupInfoResp); 
+	 rpc UpdateGroupInfo(UpdateGroupInfoReq) returns (UpdateGroupInfoResp); 
+	 rpc DelGroupInfo(DelGroupInfoReq) returns (DelGroupInfoResp); 
+	 rpc FindGroupInfoById(FindGroupInfoByIdReq) returns (FindGroupInfoByIdResp); 
+	 rpc ListGroupInfo(ListGroupInfoReq) returns (ListGroupInfoResp); 
+	 //-----------------------登录日志表----------------------- 
+	 rpc InsertLogInfo(InsertLogInfoReq) returns (InsertLogInfoResp); 
+	 rpc UpdateLogInfo(UpdateLogInfoReq) returns (UpdateLogInfoResp); 
+	 rpc DelLogInfo(DelLogInfoReq) returns (DelLogInfoResp); 
+	 rpc FindLogInfoById(FindLogInfoByIdReq) returns (FindLogInfoByIdResp); 
+	 rpc ListLogInfo(ListLogInfoReq) returns (ListLogInfoResp); 
+	 //-----------------------自然人表----------------------- 
+	 rpc InsertMember(InsertMemberReq) returns (InsertMemberResp); 
+	 rpc UpdateMember(UpdateMemberReq) returns (UpdateMemberResp); 
+	 rpc DelMember(DelMemberReq) returns (DelMemberResp); 
+	 rpc FindMemberById(FindMemberByIdReq) returns (FindMemberByIdResp); 
+	 rpc ListMember(ListMemberReq) returns (ListMemberResp); 
+	 //-----------------------项目表----------------------- 
+	 rpc InsertProject(InsertProjectReq) returns (InsertProjectResp); 
+	 rpc UpdateProject(UpdateProjectReq) returns (UpdateProjectResp); 
+	 rpc DelProject(DelProjectReq) returns (DelProjectResp); 
+	 rpc FindProjectById(FindProjectByIdReq) returns (FindProjectByIdResp); 
+	 rpc ListProject(ListProjectReq) returns (ListProjectResp); 
+	 //-----------------------账号归属表----------------------- 
+	 rpc InsertProvider(InsertProviderReq) returns (InsertProviderResp); 
+	 rpc UpdateProvider(UpdateProviderReq) returns (UpdateProviderResp); 
+	 rpc DelProvider(DelProviderReq) returns (DelProviderResp); 
+	 rpc FindProviderById(FindProviderByIdReq) returns (FindProviderByIdResp); 
+	 rpc ListProvider(ListProviderReq) returns (ListProviderResp); 
+	 //-----------------------系统使用：系统rpc重试表----------------------- 
+	 rpc InsertRetryTable(InsertRetryTableReq) returns (InsertRetryTableResp); 
+	 rpc UpdateRetryTable(UpdateRetryTableReq) returns (UpdateRetryTableResp); 
+	 rpc DelRetryTable(DelRetryTableReq) returns (DelRetryTableResp); 
+	 rpc FindRetryTableById(FindRetryTableByIdReq) returns (FindRetryTableByIdResp); 
+	 rpc ListRetryTable(ListRetryTableReq) returns (ListRetryTableResp); 
+	 //-----------------------工资流水表----------------------- 
+	 rpc InsertSalaryStatement(InsertSalaryStatementReq) returns (InsertSalaryStatementResp); 
+	 rpc UpdateSalaryStatement(UpdateSalaryStatementReq) returns (UpdateSalaryStatementResp); 
+	 rpc DelSalaryStatement(DelSalaryStatementReq) returns (DelSalaryStatementResp); 
+	 rpc FindSalaryStatementById(FindSalaryStatementByIdReq) returns (FindSalaryStatementByIdResp); 
+	 rpc ListSalaryStatement(ListSalaryStatementReq) returns (ListSalaryStatementResp); 
+	 //-----------------------静态资源表-上传记录----------------------- 
+	 rpc InsertStaticResource(InsertStaticResourceReq) returns (InsertStaticResourceResp); 
+	 rpc UpdateStaticResource(UpdateStaticResourceReq) returns (UpdateStaticResourceResp); 
+	 rpc DelStaticResource(DelStaticResourceReq) returns (DelStaticResourceResp); 
+	 rpc FindStaticResourceById(FindStaticResourceByIdReq) returns (FindStaticResourceByIdResp); 
+	 rpc ListStaticResource(ListStaticResourceReq) returns (ListStaticResourceResp); 
+	 //-----------------------主体表----------------------- 
+	 rpc InsertSubject(InsertSubjectReq) returns (InsertSubjectResp); 
+	 rpc UpdateSubject(UpdateSubjectReq) returns (UpdateSubjectResp); 
+	 rpc DelSubject(DelSubjectReq) returns (DelSubjectResp); 
+	 rpc FindSubjectById(FindSubjectByIdReq) returns (FindSubjectByIdResp); 
+	 rpc ListSubject(ListSubjectReq) returns (ListSubjectResp); 
+	 //-----------------------主体小组表----------------------- 
+	 rpc InsertSubjectTeam(InsertSubjectTeamReq) returns (InsertSubjectTeamResp); 
+	 rpc UpdateSubjectTeam(UpdateSubjectTeamReq) returns (UpdateSubjectTeamResp); 
+	 rpc DelSubjectTeam(DelSubjectTeamReq) returns (DelSubjectTeamResp); 
+	 rpc FindSubjectTeamById(FindSubjectTeamByIdReq) returns (FindSubjectTeamByIdResp); 
+	 rpc ListSubjectTeam(ListSubjectTeamReq) returns (ListSubjectTeamResp); 
+	 //-----------------------标签表----------------------- 
+	 rpc InsertTag(InsertTagReq) returns (InsertTagResp); 
+	 rpc UpdateTag(UpdateTagReq) returns (UpdateTagResp); 
+	 rpc DelTag(DelTagReq) returns (DelTagResp); 
+	 rpc FindTagById(FindTagByIdReq) returns (FindTagByIdResp); 
+	 rpc ListTag(ListTagReq) returns (ListTagResp); 
+	 //-----------------------小组成员表----------------------- 
+	 rpc InsertTeamMember(InsertTeamMemberReq) returns (InsertTeamMemberResp); 
+	 rpc UpdateTeamMember(UpdateTeamMemberReq) returns (UpdateTeamMemberResp); 
+	 rpc DelTeamMember(DelTeamMemberReq) returns (DelTeamMemberResp); 
+	 rpc FindTeamMemberById(FindTeamMemberByIdReq) returns (FindTeamMemberByIdResp); 
+	 rpc ListTeamMember(ListTeamMemberReq) returns (ListTeamMemberResp); 
+	 //-----------------------用户账户关系表----------------------- 
+	 rpc InsertUserAccRelation(InsertUserAccRelationReq) returns (InsertUserAccRelationResp); 
+	 rpc UpdateUserAccRelation(UpdateUserAccRelationReq) returns (UpdateUserAccRelationResp); 
+	 rpc DelUserAccRelation(DelUserAccRelationReq) returns (DelUserAccRelationResp); 
+	 rpc FindUserAccRelationById(FindUserAccRelationByIdReq) returns (FindUserAccRelationByIdResp); 
+	 rpc ListUserAccRelation(ListUserAccRelationReq) returns (ListUserAccRelationResp); 
+	 //-----------------------用户表----------------------- 
+	 rpc InsertUserInfo(InsertUserInfoReq) returns (InsertUserInfoResp); 
+	 rpc UpdateUserInfo(UpdateUserInfoReq) returns (UpdateUserInfoResp); 
+	 rpc DelUserInfo(DelUserInfoReq) returns (DelUserInfoResp); 
+	 rpc FindUserInfoById(FindUserInfoByIdReq) returns (FindUserInfoByIdResp); 
+	 rpc ListUserInfo(ListUserInfoReq) returns (ListUserInfoResp); 
+
+}
