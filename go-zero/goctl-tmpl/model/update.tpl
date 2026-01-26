@@ -47,7 +47,7 @@ func (m *default{{.upperStartCamelObject}}Model) UpdatePartialByFunc(ctx context
 		return err
 	}
 	if one == nil {
-	    return fmt.Errorf("{{.upperStartCamelObject}} not found")
+	    return fmt.Errorf("{{.upperStartCamelObject}} : %v not found", {{.lowerStartCamelPrimaryKey}})
 	}
 	err = updateFunc(one)
 	if err != nil {
