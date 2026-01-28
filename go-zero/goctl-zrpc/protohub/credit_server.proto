@@ -1,9 +1,10 @@
 syntax = "proto3";
 
-option go_package ="./creditpb";
 package creditpb;
 
 import "google/protobuf/timestamp.proto";
+
+option go_package ="./creditpb";
 
 // ------------------------------------ 
 // Messages
@@ -886,13 +887,14 @@ message ListRetryTableResp {
 //--------------------------------工资流水表--------------------------------
 message SalaryStatement {
   int64 salary_statement_id = 1; //salary_statement_id
-  int64 member_id = 2; //关联member_id
-  int32 salary_month = 3; //工资月份
-  double total_gross = 4; //总收入
-  double basic_salary = 5; //基本工资
-  double netpay = 6; //实发工资
-  google.protobuf.Timestamp create_time = 7; //创建时间
-  google.protobuf.Timestamp update_time = 8; //更新时间
+  int64 subject_id = 2; //subject_id
+  int64 member_id = 3; //关联member_id
+  int32 salary_month = 4; //工资月份
+  double total_gross = 5; //总收入
+  double basic_salary = 6; //基本工资
+  double netpay = 7; //实发工资
+  google.protobuf.Timestamp create_time = 8; //创建时间
+  google.protobuf.Timestamp update_time = 9; //更新时间
 }
 
 message InsertSalaryStatementReq {
@@ -928,13 +930,14 @@ message ListSalaryStatementReq {
   int64 page = 1; //page
   int64 limit = 2; //limit
   int64 salary_statement_id = 3; //salary_statement_id
-  int64 member_id = 4; //关联member_id
-  int32 salary_month = 5; //工资月份
-  double total_gross = 6; //总收入
-  double basic_salary = 7; //基本工资
-  double netpay = 8; //实发工资
-  google.protobuf.Timestamp create_time = 9; //创建时间
-  google.protobuf.Timestamp update_time = 10; //更新时间
+  int64 subject_id = 4; //subject_id
+  int64 member_id = 5; //关联member_id
+  int32 salary_month = 6; //工资月份
+  double total_gross = 7; //总收入
+  double basic_salary = 8; //基本工资
+  double netpay = 9; //实发工资
+  google.protobuf.Timestamp create_time = 10; //创建时间
+  google.protobuf.Timestamp update_time = 11; //更新时间
 }
 
 message ListSalaryStatementResp {
