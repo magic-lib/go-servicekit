@@ -12,9 +12,12 @@ APIGoProjectDir := "./demo"
 gen-update-package:
 	go install github.com/zeromicro/go-zero/tools/goctl@latest
 	go install github.com/zeromicro/goctl-swagger@latest
-	go get github.com/magic-lib/go-servicekit@master
+	#go get github.com/magic-lib/go-servicekit@master
 	go get github.com/magic-lib/go-plat-utils@master
 	go install github.com/Mikaelemmmm/sql2pb@latest
+	#https://github.com/protocolbuffers/protobuf/releases
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go mod tidy
 
 gen-zero-init:
@@ -60,7 +63,7 @@ gen-grpc:
 	  protoc $${filename} --go_out=$(GrpcRpcGoCreateFolder) \
       		--go-grpc_out=$(GrpcRpcGoCreateFolder) \
       		--proto_path=$(GrpcProtoHub) \
-      		--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-29.2/include; \
+      		--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-33.4/include; \
 	done
 	@cp -f $(ZeroTemplateDir)/goctl-tmpl/rpc/.gitlab-ci.yml $(GrpcRpcGoCreateFolder);
 	@echo "生成grpc代码完成"
@@ -74,7 +77,7 @@ gen-zero-grpc:
 	  goctl rpc protoc $${filename} --go_out=$(GrpcRpcGoCreateFolder) \
 			--go-grpc_out=$(GrpcRpcGoCreateFolder) \
 			--proto_path=$(GrpcProtoHub) \
-			--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-29.2/include \
+			--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-33.4/include \
 			--zrpc_out=$(ZGrpcZRpcCreateFolder) \
 			--style go_zero; \
 	done

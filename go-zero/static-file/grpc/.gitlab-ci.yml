@@ -12,7 +12,7 @@ generate_pb:
   before_script:
     # 安装 protoc
     - apt-get update && apt-get install -y wget unzip
-    - wget https://github.com/protocolbuffers/protobuf/releases/download/v29.2/protoc-29.2-linux-x86_64.zip -O protoc.zip
+    - wget https://github.com/protocolbuffers/protobuf/releases/download/v33.4/protoc-33.4-linux-x86_64.zip -O protoc.zip
     - unzip protoc.zip -d /usr/local
     - chmod +x /usr/local/bin/protoc
     - rm -f protoc.zip
