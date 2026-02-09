@@ -1,4 +1,4 @@
-func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{.lowerStartCamelPrimaryKey}} {{.dataType}}) (*{{.upperStartCamelObject}}, error) {
+func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{.lowerStartCamelPrimaryKey}} {{.dataType}}, session ...sqlx.Session) (*{{.upperStartCamelObject}}, error) {
 	{{if .withCache}}{{.cacheKey}}
 	var resp {{.upperStartCamelObject}}
 	err := m.QueryRowCtx(ctx, &resp, {{.cacheKeyVariable}}, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
@@ -18,7 +18,13 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	var resp {{.upperStartCamelObject}}
 	ctx, span := tracer.StartSpan(ctx, "SQL", query)
     defer span.End()
-	err := m.conn.QueryRowCtx(ctx, &resp, query, {{.lowerStartCamelPrimaryKey}})
+    var oneSession sqlx.Session
+    if len(session) > 0 && session[0] != nil {
+        oneSession = session[0]
+    }else{
+        oneSession = m.conn
+    }
+	err := oneSession.QueryRowCtx(ctx, &resp, query, {{.lowerStartCamelPrimaryKey}})
 	switch err {
 	case nil:
 		return &resp, nil
@@ -29,7 +35,7 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	}{{end}}
 }
 
-func (m *default{{.upperStartCamelObject}}Model) Find{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition) (*{{.upperStartCamelObject}}, error) {
+func (m *default{{.upperStartCamelObject}}Model) Find{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition, session ...sqlx.Session) (*{{.upperStartCamelObject}}, error) {
 	query, data, err := m.sqlBuilder.SelectSql("*", whereCond, 0, 1)
 	if err != nil {
         return nil, err
@@ -37,7 +43,13 @@ func (m *default{{.upperStartCamelObject}}Model) Find{{.upperStartCamelObject}}(
 	resp := new({{.upperStartCamelObject}})
 	ctx, span := tracer.StartSpan(ctx, "SQL", query)
     defer span.End()
-	err = m.conn.QueryRowCtx(ctx, resp, query, data...)
+    var oneSession sqlx.Session
+    if len(session) > 0 && session[0] != nil {
+        oneSession = session[0]
+    }else{
+        oneSession = m.conn
+    }
+	err = oneSession.QueryRowCtx(ctx, resp, query, data...)
 	switch err {
 	case nil:
 		return resp, nil
@@ -48,13 +60,13 @@ func (m *default{{.upperStartCamelObject}}Model) Find{{.upperStartCamelObject}}(
 	}
 }
 
-func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition) ([]*{{.upperStartCamelObject}}, error) {
-	list, _, err := m.List{{.upperStartCamelObject}}ByPage(ctx, whereCond, nil, 0, "")
+func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition, session ...sqlx.Session) ([]*{{.upperStartCamelObject}}, error) {
+	list, _, err := m.List{{.upperStartCamelObject}}ByPage(ctx, whereCond, nil, 0, "", session...)
 	return list, err
 }
 
 
-func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}ByPage(ctx context.Context, whereCond sqlstatement.LogicCondition, pageModel *httputil.PageModel, maxLimit int, orderBy string) ([]*{{.upperStartCamelObject}}, int64, error) {
+func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}ByPage(ctx context.Context, whereCond sqlstatement.LogicCondition, pageModel *httputil.PageModel, maxLimit int, orderBy string, session ...sqlx.Session) ([]*{{.upperStartCamelObject}}, int64, error) {
 	if pageModel == nil {
         pageModel = new(httputil.PageModel)
     }else{
@@ -93,7 +105,14 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}B
 	list := make([]*{{.upperStartCamelObject}}, 0)
 	ctx, span := tracer.StartSpan(ctx, "SQL", query)
     defer span.End()
-	err = m.conn.QueryRowsCtx(ctx, &list, query, data...)
+
+    var oneSession sqlx.Session
+    if len(session) > 0 && session[0] != nil {
+        oneSession = session[0]
+    }else{
+        oneSession = m.conn
+    }
+	err = oneSession.QueryRowsCtx(ctx, &list, query, data...)
 	listLen := int64(len(list))
 	if err != nil {
 		return list, listLen, err
@@ -102,7 +121,7 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}B
 		return list, listLen, nil
 	}
 
-	total, err := m.Count{{.upperStartCamelObject}}(ctx, whereCond)
+	total, err := m.Count{{.upperStartCamelObject}}(ctx, whereCond, session...)
 	if err != nil {
 		return list, listLen, err
 	}
@@ -111,13 +130,22 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}B
 }
 
 
-func (m *default{{.upperStartCamelObject}}Model) Count{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition) (int64, error) {
+func (m *default{{.upperStartCamelObject}}Model) Count{{.upperStartCamelObject}}(ctx context.Context, whereCond sqlstatement.LogicCondition, session ...sqlx.Session) (int64, error) {
 	countSql, countData, err := m.sqlBuilder.SelectSql("COUNT(*)", whereCond, 0, 0)
     if err != nil {
         return 0, err
     }
     var total int64
-    err = m.QueryRowCtx(ctx, &total, countSql, countData...)
+
+    ctx, span := tracer.StartSpan(ctx, "SQL", countSql)
+    defer span.End()
+    var oneSession sqlx.Session
+    if len(session) > 0 && session[0] != nil {
+        oneSession = session[0]
+    }else{
+        oneSession = m.conn
+    }
+    err = oneSession.QueryRowCtx(ctx, &total, countSql, countData...)
     if err != nil {
         return 0, err
     }

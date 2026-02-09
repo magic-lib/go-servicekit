@@ -8,8 +8,7 @@ func (m *default{{.upperStartCamelObject}}Model) insert(ctx context.Context, dat
 	}, {{.keyValues}}){{else}}query := fmt.Sprintf("insert into %s (%s) values ({{.expression}})", m.table, {{.lowerStartCamelObject}}RowsExpectAutoSet)
     ctx, span := tracer.StartSpan(ctx, "SQL", query)
     defer span.End()
-    ret,err:=m.conn.ExecCtx(ctx, query, {{.expressionValues}}){{end}}
-	return ret,err
+	return m.conn.ExecCtx(ctx, query, {{.expressionValues}}){{end}}
 }
 
 func (m *default{{.upperStartCamelObject}}Model) Insert(ctx context.Context, data *{{.upperStartCamelObject}}, session ...sqlx.Session) (sql.Result,error) {
@@ -21,12 +20,13 @@ func (m *default{{.upperStartCamelObject}}Model) Insert(ctx context.Context, dat
     if err != nil {
         return nil, err
     }
+    var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
-        ret, err := session[0].ExecCtx(ctx, insertSql, insertData...)
-        return ret,err
+        oneSession = session[0]
+    } else {
+        oneSession = m.conn
     }
-    ret, err := m.conn.ExecCtx(ctx, insertSql, insertData...)
-    return ret,err
+    return oneSession.ExecCtx(ctx, insertSql, insertData...)
 }
 
 func (m *default{{.upperStartCamelObject}}Model) InsertList(ctx context.Context, dataList []*{{.upperStartCamelObject}}, session ...sqlx.Session) (sql.Result,error) {
@@ -38,10 +38,11 @@ func (m *default{{.upperStartCamelObject}}Model) InsertList(ctx context.Context,
     if err != nil {
         return nil, err
     }
+    var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
-        ret, err := session[0].ExecCtx(ctx, insertSql, insertData...)
-        return ret,err
+        oneSession = session[0]
+    } else {
+        oneSession = m.conn
     }
-    ret, err := m.conn.ExecCtx(ctx, insertSql, insertData...)
-    return ret,err
+    return oneSession.ExecCtx(ctx, insertSql, insertData...)
 }

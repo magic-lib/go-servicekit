@@ -40,7 +40,56 @@ func TestNewRabbitMQClient(t *testing.T) {
 	}
 
 	str, err := publisher.Publish(context.Background(), &mq.Event{
-		Timestamp: time.Now(),
+		Timestamp: time.Now().Unix(),
+		Headers: http.Header{
+			"a": []string{"4444"},
+		},
+		Payload: []byte("hello world"),
+	})
+	fmt.Println(str)
+	fmt.Println(err)
+	time.Sleep(10 * time.Second)
+
+}
+
+func TestNewRocketMQClient(t *testing.T) {
+	mqConfig := &mq.RocketMQConfig{
+		Connect: &conn.Connect{
+			Host:     "192.168.2.84",
+			Port:     "9876",
+			Username: "root",
+			Password: "mjhttyryt565-jyjh5824t-p55w",
+		},
+		//NameSpace:     "zambest",
+		ConsumerGroup: "order",
+		TopicHandlers: map[string]mq.ConsumerHandler{
+			"hello": func(ctx context.Context, event *mq.Event) error {
+				fmt.Println("id:", event.Id)
+				fmt.Println("payload:", string(event.Payload))
+				return nil
+			},
+		},
+	}
+
+	consumer, err := mq.NewRocketMQConsumer(mqConfig)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = consumer.Start(nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	publisher, err := mq.NewRocketMQPublisher(mqConfig)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	str, err := publisher.Publish(context.Background(), &mq.Event{
+		Timestamp: time.Now().Unix(),
 		Headers: http.Header{
 			"a": []string{"4444"},
 		},

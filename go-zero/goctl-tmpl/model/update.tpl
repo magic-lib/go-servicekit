@@ -21,6 +21,8 @@ func (m *default{{.upperStartCamelObject}}Model) Update(ctx context.Context, dat
     var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
         oneSession = session[0]
+    } else {
+        oneSession = m.conn
     }
     return m.updatePartialBySession(ctx, oneSession, data, []string{}, sqlstatement.LogicCondition{
         Conditions: []any{
@@ -37,12 +39,14 @@ func (m *default{{.upperStartCamelObject}}Model) UpdatePartial(ctx context.Conte
     var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
         oneSession = session[0]
+    } else {
+        oneSession = m.conn
     }
     return m.updatePartialBySession(ctx, oneSession, data, columns, whereCondition)
 }
 
 func (m *default{{.upperStartCamelObject}}Model) UpdatePartialByFunc(ctx context.Context, {{.lowerStartCamelPrimaryKey}} {{.dataType}}, updateFunc func(data *{{.upperStartCamelObject}}) error, session ...sqlx.Session) error {
-	one, err := m.FindOne(ctx, {{.lowerStartCamelPrimaryKey}})
+	one, err := m.FindOne(ctx, {{.lowerStartCamelPrimaryKey}}, session...)
 	if err != nil {
 		return err
 	}
@@ -74,8 +78,7 @@ func (m *default{{.upperStartCamelObject}}Model) updatePartialBySession(ctx cont
     defer span.End()
 
     if session == nil {
-        _, err = m.conn.ExecCtx(ctx, query, updateData...)
-        return err
+        session = m.conn
     }
     _, err = session.ExecCtx(ctx, query, updateData...)
     return err

@@ -3,13 +3,13 @@ package mq
 import (
 	"context"
 	"net/http"
-	"time"
 )
 
 // Event 代表一个通用的消息事件
 type Event struct {
 	Id        string      `json:"id"`        // 消息ID
-	Timestamp time.Time   `json:"timestamp"` // 消息创建时间戳
+	Topic     string      `json:"topic"`     // 消息主题
+	Timestamp int64       `json:"timestamp"` // 消息创建时间戳，秒级
 	Headers   http.Header `json:"headers"`   // 用于传递元数据，如 Trace Context
 	Payload   []byte      `json:"payload"`   // 消息内容
 }

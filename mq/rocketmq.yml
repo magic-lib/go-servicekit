@@ -1,0 +1,37 @@
+version: '3.9'
+
+
+
+#docker run -d -p 18080:8080 \
+#  --name rocketmq-console \
+#  -e "JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false" \
+#  apacherocketmq/rocketmq-console:latest
+
+
+#docker run -d \
+#  --name rmqnamesrv \
+#  -p 9876:9876 \
+#  -e NAMESPACE=zambest
+#  apache/rocketmq:latest sh mqnamesrv
+#
+#docker run -d \
+#  --name rmqbroker \
+#  -p 11912:10912 -p 11911:10911 -p 11909:10909 \
+#  -e ROCKETMQ_ACCESS_KEY="root" \
+#  -e ROCKETMQ_SECRET_KEY="mjhttyryt565-jyjh5824t-p55w" \
+#  -e NAMESRV_ADDR=rmqnamesrv:9876 \
+#  apache/rocketmq:latest sh mqbroker -n rmqnamesrv:9876
+
+
+#docker run -d -p 9876:9876 --name rmqnamesrv rocketmqinc/rocketmq sh mqnamesrv
+#docker run -d \
+#  -p 10909:10909 \
+#  -p 10911:10911 \
+#  --name rmqbroker \
+#  -e "NAMESRV_ADDR=rmqnamesrv:9876" \
+#  -v /data/project/rocketmq/store:/root/store \
+#  rocketmqinc/rocketmq \
+#  sh mqbroker -n rmqnamesrv:9876;
+
+
+#docker run -d --name rocketmq-dashboard -e "JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876" -p 10913:8082 -t apacherocketmq/rocketmq-dashboard:latest

@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	poolManager *cache.PoolManager[*amqp.Connection]
+	rabbitPoolManager *cache.PoolManager[*amqp.Connection]
 )
 
 // RabbitMQClient 封装了 RabbitMQ 的连接和通道
@@ -61,14 +61,14 @@ func newRabbitMQClient(url string, conn *conn.Connect) (*RabbitMQClient, error) 
 		return nil, fmt.Errorf("RabbitMQ url is empty")
 	}
 
-	if poolManager == nil {
-		poolManager = cache.NewPoolManager[*amqp.Connection]()
+	if rabbitPoolManager == nil {
+		rabbitPoolManager = cache.NewPoolManager[*amqp.Connection]()
 	}
 
-	resPool := poolManager.GetPool(mqNamespace, url)
+	resPool := rabbitPoolManager.GetPool(mqNamespace, url)
 	if resPool == nil {
 		resPool = getAmqpConnection(url)
-		poolManager.SetPool(mqNamespace, url, resPool)
+		rabbitPoolManager.SetPool(mqNamespace, url, resPool)
 	}
 	return &RabbitMQClient{
 		url:     url,
@@ -207,13 +207,18 @@ func (p *rabbitMQPublisher) getPublishMessage(event *Event) amqp.Publishing {
 		headers[k] = event.Headers.Get(k)
 	}
 
+	t := time.Now()
+	if event.Timestamp > 0 {
+		t = time.Unix(event.Timestamp, 0)
+	}
+
 	msg := amqp.Publishing{
 		ContentType:  "text/plain",
 		DeliveryMode: amqp.Persistent, // 消息持久化（重启后消息不丢失）
 		MessageId:    event.Id,
 		Body:         event.Payload,
 		Headers:      amqp.Table(headers), // amqp.Table 的底层就是 map[string]interface{}
-		Timestamp:    event.Timestamp,
+		Timestamp:    t,
 	}
 
 	if msg.MessageId == "" {
@@ -310,7 +315,7 @@ func (p *rabbitMQPublisher) Close() {
 }
 
 // RabbitMQConsumer 实现了 Consumer 接口
-type RabbitMQConsumer struct {
+type rabbitMQConsumer struct {
 	client *RabbitMQClient
 	cfg    *RabbitMQConfig
 }
@@ -329,13 +334,13 @@ func NewRabbitMQConsumer(cfg *RabbitMQConfig) (Consumer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RabbitMQConsumer{
+	return &rabbitMQConsumer{
 		client: client,
 		cfg:    cfg,
 	}, nil
 }
 
-func (c *RabbitMQConsumer) getChannel() (*amqp.Channel, error) {
+func (c *rabbitMQConsumer) getChannel() (*amqp.Channel, error) {
 	channel, queue, err := getChannel(c.client, c.cfg)
 	if err != nil {
 		return nil, err
@@ -356,7 +361,7 @@ func (c *RabbitMQConsumer) getChannel() (*amqp.Channel, error) {
 	return channel, nil
 }
 
-func (c *RabbitMQConsumer) Start(handler ConsumerHandler) error {
+func (c *rabbitMQConsumer) Start(handler ConsumerHandler) error {
 	channel, err := c.getChannel()
 	if err != nil {
 		return err
@@ -408,7 +413,7 @@ func (c *RabbitMQConsumer) Start(handler ConsumerHandler) error {
 
 				event := &Event{
 					Id:        d.MessageId,
-					Timestamp: d.Timestamp,
+					Timestamp: d.Timestamp.Unix(),
 					Headers:   headers,
 					Payload:   d.Body,
 				}
@@ -425,6 +430,6 @@ func (c *RabbitMQConsumer) Start(handler ConsumerHandler) error {
 	return nil
 }
 
-func (c *RabbitMQConsumer) Close() {
+func (c *rabbitMQConsumer) Close() {
 	c.client.Close()
 }

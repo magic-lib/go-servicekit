@@ -1,1 +1,1 @@
-Find{{.upperStartCamelObject}}By{{.upperField}}(ctx context.Context, {{.in}}) (*{{.upperStartCamelObject}}, error)
+Find{{.upperStartCamelObject}}By{{.upperField}}(ctx context.Context, {{.in}}, session ...sqlx.Session) (*{{.upperStartCamelObject}}, error)
