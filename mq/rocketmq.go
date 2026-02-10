@@ -83,19 +83,17 @@ func NewRocketMQPublisher(cfg *RocketMQConfig) (Publisher, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to start the producer: %w", err)
 	}
-	publisher := &rocketMQPublisher{
+	return &rocketMQPublisher{
 		publisher: rocketMQProducer,
 		cfg:       cfg,
-	}
-	return publisher, nil
+	}, nil
 }
 
 func (p *rocketMQPublisher) Publish(ctx context.Context, event *Event) (string, error) {
 	if event == nil {
 		return "", fmt.Errorf("event is empty")
 	}
-	topic := event.Headers.Get("topic")
-	if topic == "" {
+	if event.Topic == "" {
 		return "", fmt.Errorf("topic is empty")
 	}
 
@@ -111,7 +109,7 @@ func (p *rocketMQPublisher) Publish(ctx context.Context, event *Event) (string, 
 	msg := &golang.Message{
 		Body:  event.Payload,
 		Tag:   &event.Id,
-		Topic: topic,
+		Topic: event.Topic,
 	}
 	msg.SetKeys(conv.String(event.Headers))
 

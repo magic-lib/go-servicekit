@@ -1,6 +1,6 @@
 ZeroTemplateDir := ${GOPATH}/code/magic-lib/go-servicekit/go-zero
 ModelGoDir := "./demo/model/db"
-ModelMysqlDsn := "root:mjhttyryt565-jyjh5824t-p55w@tcp(192.168.2.84:10365)/account-server"
+ModelMysqlDsn := "root:mjhttyryt565-jyjh5824t-p55w@tcp(192.168.2.84:10365)/allinone-account"
 GoCtlPath := "${GOPATH}/bin"
 
 ############### api-init-start ###############

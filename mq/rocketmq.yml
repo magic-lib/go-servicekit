@@ -23,7 +23,7 @@ version: '3.9'
 #  apache/rocketmq:latest sh mqbroker -n rmqnamesrv:9876
 
 
-#docker run -d -p 9876:9876 --name rmqnamesrv rocketmqinc/rocketmq sh mqnamesrv
+#docker run -d -p 9876:9876 --name rmqnamesrv -e "JAVA_OPTS=-XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSFullGCsBeforeCompaction=5" rocketmqinc/rocketmq sh mqnamesrv
 #docker run -d \
 #  -p 10909:10909 \
 #  -p 10911:10911 \
@@ -34,4 +34,4 @@ version: '3.9'
 #  sh mqbroker -n rmqnamesrv:9876;
 
 
-#docker run -d --name rocketmq-dashboard -e "JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876" -p 10913:8082 -t apacherocketmq/rocketmq-dashboard:latest
+#docker run -d --name rocketmq-dashboard -e "JAVA_OPTS=-Drocketmq.namesrv.addr=rmqnamesrv:9876" -p 10913:8082 apacherocketmq/rocketmq-dashboard:latest
