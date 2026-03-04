@@ -5,13 +5,12 @@ import {{.authImport}}
 import (
 	"github.com/magic-lib/go-plat-startupcfg/startupcfg"
 	"github.com/zeromicro/go-zero/zrpc"
-	"github.com/magic-lib/go-servicekit/tracer"
 )
 
 type Config struct {
 	RestConf      rest.RestConf
 	RpcServerConf zrpc.RpcServerConf // gRPC 服务端配置
-    TraceConfig   tracer.TraceConfig
+    //TraceConfig   tracer.TraceConfig
     MysqlConf     MysqlDatabase
     Log           logx.LogConf
     Prefix        string

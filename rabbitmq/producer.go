@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/magic-lib/go-plat-utils/cond"
-	"github.com/magic-lib/go-servicekit/tracer"
 	"github.com/streadway/amqp"
 )
 
@@ -100,13 +99,13 @@ func (r *RabbitClient) commPushMessage(ctx context.Context, opt *ProducerOption)
 	}
 	config.Body = []byte(opt.Content)
 
-	_, ok := tracer.TraceProvider()
-	if ok {
-		tc := tracer.GetTraceConfig()
-		if tc != nil {
-			config.Headers = tc.RabbitMQPublishTable(ctx, map[string]any{})
-		}
-	}
+	//_, ok := tracer.TraceProvider()
+	//if ok {
+	//	tc := tracer.GetTraceConfig()
+	//	if tc != nil {
+	//		config.Headers = tc.RabbitMQPublishTable(ctx, map[string]any{})
+	//	}
+	//}
 
 	err = ch.Publish(
 		opt.Exchange,  // 交换机名称（使用默认交换机）

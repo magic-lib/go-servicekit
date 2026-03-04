@@ -223,7 +223,7 @@ func StartSpan(ctx context.Context, spanMethod string, spanName string) (context
 		newSpanName = fmt.Sprintf("%s %s", strings.ToUpper(spanMethod), newSpanName)
 	}
 
-	newCtx, tracer := TracerFromContext(ctx, "github.com/magic-lib/go-servicekit/tracer")
+	newCtx, tracer := TracerFromContext(ctx, "github.com/magic-lib/go-plat-trace/tracer")
 	newCtx, span := tracer.Start(newCtx, newSpanName, trace.WithSpanKind(trace.SpanKindClient))
 	SetTags(span, map[string]any{
 		"span_name": spanName,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/magic-lib/go-plat-utils/goroutines"
-	"github.com/magic-lib/go-servicekit/tracer"
 )
 
 // MessageHandler 消息消费的回调方法
@@ -61,13 +60,13 @@ func (r *RabbitClient) StartConsumer(opt *ConsumerOptions) error {
 
 			for d := range msgs {
 				ctx := context.Background()
-				_, ok := tracer.TraceProvider()
-				if ok {
-					tc := tracer.GetTraceConfig()
-					if tc != nil {
-						ctx = tc.RabbitMQConsumer(ctx, d.Headers)
-					}
-				}
+				//_, ok := tracer.TraceProvider()
+				//if ok {
+				//	tc := tracer.GetTraceConfig()
+				//	if tc != nil {
+				//		ctx = tc.RabbitMQConsumer(ctx, d.Headers)
+				//	}
+				//}
 				err = opt.Handler(ctx, d.MessageId, string(d.Body))
 				if err == nil {
 					err = d.Ack(false)

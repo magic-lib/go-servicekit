@@ -9,7 +9,7 @@ import (
 	"github.com/magic-lib/go-plat-utils/conn"
 	"github.com/magic-lib/go-plat-utils/conv"
 	"github.com/magic-lib/go-plat-utils/goroutines"
-	"github.com/magic-lib/go-servicekit/tracer"
+	//"github.com/magic-lib/go-servicekit/tracer"
 	"log"
 	"net"
 	"net/http"
@@ -281,13 +281,13 @@ func (p *rabbitMQPublisher) Publish(ctx context.Context, event *Event) (string, 
 
 	msg := p.getPublishMessage(event)
 
-	_, ok := tracer.TraceProvider()
-	if ok {
-		tc := tracer.GetTraceConfig()
-		if tc != nil {
-			msg.Headers = tc.RabbitMQPublishTable(ctx, msg.Headers)
-		}
-	}
+	//_, ok := tracer.TraceProvider()
+	//if ok {
+	//	tc := tracer.GetTraceConfig()
+	//	if tc != nil {
+	//		msg.Headers = tc.RabbitMQPublishTable(ctx, msg.Headers)
+	//	}
+	//}
 
 	if p.cfg.PushRetryTimes <= 0 {
 		p.cfg.PushRetryTimes = maxRetries
@@ -396,13 +396,13 @@ func (c *rabbitMQConsumer) Start(handler ConsumerHandler) error {
 			}
 			for d := range msgs {
 				ctx := context.Background()
-				_, ok := tracer.TraceProvider()
-				if ok {
-					tc := tracer.GetTraceConfig()
-					if tc != nil {
-						ctx = tc.RabbitMQConsumer(ctx, d.Headers)
-					}
-				}
+				//_, ok := tracer.TraceProvider()
+				//if ok {
+				//	tc := tracer.GetTraceConfig()
+				//	if tc != nil {
+				//		ctx = tc.RabbitMQConsumer(ctx, d.Headers)
+				//	}
+				//}
 				var headers http.Header
 				if len(d.Headers) > 0 {
 					headers = make(http.Header)
