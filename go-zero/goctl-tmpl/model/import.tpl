@@ -3,7 +3,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/magic-lib/go-plat-utils/utils/httputil"
-	"github.com/magic-lib/go-servicekit/tracer"
+	//"github.com/magic-lib/go-plat-trace/tracer"
 	"strings"
 	{{if .time}}"time"{{end}}
 

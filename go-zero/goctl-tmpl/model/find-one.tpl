@@ -3,8 +3,8 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	var resp {{.upperStartCamelObject}}
 	err := m.QueryRowCtx(ctx, &resp, {{.cacheKeyVariable}}, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
 		query :=  fmt.Sprintf("select %s from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}} limit 1", {{.lowerStartCamelObject}}Rows, m.table)
-		ctx, span := tracer.StartSpan(ctx, "SQL", query)
-        defer span.End()
+		//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+        //defer span.End()
 		return conn.QueryRowCtx(ctx, v, query, {{.lowerStartCamelPrimaryKey}})
 	})
 	switch err {
@@ -16,8 +16,8 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 		return nil, err
 	}{{else}}query := fmt.Sprintf("select %s from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}} limit 1", {{.lowerStartCamelObject}}Rows, m.table)
 	var resp {{.upperStartCamelObject}}
-	ctx, span := tracer.StartSpan(ctx, "SQL", query)
-    defer span.End()
+	//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+    //defer span.End()
     var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
         oneSession = session[0]
@@ -41,8 +41,8 @@ func (m *default{{.upperStartCamelObject}}Model) Find{{.upperStartCamelObject}}(
         return nil, err
     }
 	resp := new({{.upperStartCamelObject}})
-	ctx, span := tracer.StartSpan(ctx, "SQL", query)
-    defer span.End()
+	//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+    //defer span.End()
     var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
         oneSession = session[0]
@@ -103,8 +103,8 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}B
     }
 
 	list := make([]*{{.upperStartCamelObject}}, 0)
-	ctx, span := tracer.StartSpan(ctx, "SQL", query)
-    defer span.End()
+	//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+    //defer span.End()
 
     var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
@@ -137,8 +137,8 @@ func (m *default{{.upperStartCamelObject}}Model) Count{{.upperStartCamelObject}}
     }
     var total int64
 
-    ctx, span := tracer.StartSpan(ctx, "SQL", countSql)
-    defer span.End()
+    //ctx, span := tracer.StartSpan(ctx, "SQL", countSql)
+    //defer span.End()
     var oneSession sqlx.Session
     if len(session) > 0 && session[0] != nil {
         oneSession = session[0]

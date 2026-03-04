@@ -7,12 +7,12 @@ func (m *default{{.upperStartCamelObject}}Model) delete(ctx context.Context, {{.
 {{end}}	{{.keys}}
     _, err {{if .containsIndexCache}}={{else}}:={{end}} m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}}", m.table)
-		ctx, span := tracer.StartSpan(ctx, "SQL", query)
-        defer span.End()
+		//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+        //defer span.End()
 		return conn.ExecCtx(ctx, query, {{.lowerStartCamelPrimaryKey}})
 	}, {{.keyValues}}){{else}}query := fmt.Sprintf("delete from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}}", m.table)
-		ctx, span := tracer.StartSpan(ctx, "SQL", query)
-        defer span.End()
+		//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+        //defer span.End()
 		_,err:=m.conn.ExecCtx(ctx, query, {{.lowerStartCamelPrimaryKey}}){{end}}
 	return err
 }
@@ -56,8 +56,8 @@ func (m *default{{.upperStartCamelObject}}Model) DeleteByWhere(ctx context.Conte
 	if err != nil {
 		return err
 	}
-	ctx, span := tracer.StartSpan(ctx, "SQL", query)
-	defer span.End()
+	//ctx, span := tracer.StartSpan(ctx, "SQL", query)
+	//defer span.End()
 
 	if len(session) > 0 && session[0] != nil {
         _, err = session[0].ExecCtx(ctx, query, deleteData...)

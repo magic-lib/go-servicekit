@@ -9,6 +9,7 @@ import (
 	"github.com/magic-lib/go-plat-utils/conn"
 	"github.com/magic-lib/go-plat-utils/conv"
 	"github.com/samber/lo"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"time"
 )
@@ -21,6 +22,12 @@ type RocketMQConfig struct {
 	Credentials           *credentials.SessionCredentials
 	TopicHandlers         map[string]ConsumerHandler
 	ConsumerAwaitDuration time.Duration
+
+	SendTimeout   time.Duration // 发送超时时间
+	MaxAttempts   int           // 最大重试次数
+	RetryInterval time.Duration // 重试间隔
+	EnableTracing bool          // 是否启用追踪
+	LogLevel      string        // 日志级别
 }
 
 // rocketMQPublisher 实现了 Publisher 接口
@@ -52,6 +59,20 @@ func checkRocketConfig(cfg *RocketMQConfig) error {
 	}
 
 	return nil
+}
+
+// NewRocketMQPublisherWithDefaults 创建带有默认配置的 RocketMQ 发布者
+func NewRocketMQPublisherWithDefaults(endpoint, consumerGroup string) (Publisher, error) {
+	cfg := &RocketMQConfig{
+		Endpoint:      endpoint,
+		ConsumerGroup: consumerGroup,
+		SendTimeout:   5 * time.Second,
+		MaxAttempts:   3,
+		RetryInterval: 1 * time.Second,
+		EnableTracing: true,
+		LogLevel:      "INFO",
+	}
+	return NewRocketMQPublisher(cfg)
 }
 
 // NewRocketMQPublisher 创建一个新的 RabbitMQ 发布者
@@ -113,21 +134,51 @@ func (p *rocketMQPublisher) Publish(ctx context.Context, event *Event) (string, 
 	}
 	msg.SetKeys(conv.String(event.Headers))
 
-	_, err := p.publisher.Send(ctx, msg)
+	// 添加追踪信息（如果存在）
+	if span := trace.SpanFromContext(ctx); span.SpanContext().IsValid() {
+		traceId := span.SpanContext().TraceID().String()
+		spanId := span.SpanContext().SpanID().String()
+		event.Headers.Set("Trace-Id", traceId)
+		event.Headers.Set("Span-Id", spanId)
+	}
+
+	result, err := p.publisher.Send(ctx, msg)
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message %v", err)
+	}
+	if result != nil && len(result) > 0 {
+		fmt.Printf("Message published successfully to topic %s, message ID: %s\n", event.Topic, event.Id)
 	}
 	return event.Id, nil
 }
 
 func (p *rocketMQPublisher) Close() {
-	_ = p.publisher.GracefulStop()
+	if p.publisher != nil {
+		fmt.Println("Closing RocketMQ publisher...")
+		_ = p.publisher.GracefulStop()
+	}
 }
 
 // rocketMQConsumer 实现了 Consumer 接口
 type rocketMQConsumer struct {
 	consumer golang.PushConsumer
 	cfg      *RocketMQConfig
+	handler  ConsumerHandler
+}
+
+// NewRocketMQConsumerWithDefaults 创建带有默认配置的 RocketMQ 消费者
+func NewRocketMQConsumerWithDefaults(endpoint, consumerGroup string) (Consumer, error) {
+	cfg := &RocketMQConfig{
+		Endpoint:              endpoint,
+		ConsumerGroup:         consumerGroup,
+		ConsumerAwaitDuration: 500 * time.Millisecond,
+		SendTimeout:           5 * time.Second,
+		MaxAttempts:           3,
+		RetryInterval:         1 * time.Second,
+		EnableTracing:         true,
+		LogLevel:              "INFO",
+	}
+	return NewRocketMQConsumer(cfg)
 }
 
 // NewRocketMQConsumer 创建一个新的消费者
@@ -145,51 +196,54 @@ func NewRocketMQConsumer(cfg *RocketMQConfig) (Consumer, error) {
 	}, nil
 }
 
-func (c *rocketMQConsumer) Start(_ ConsumerHandler) error {
+func (c *rocketMQConsumer) Start(handler ConsumerHandler) error {
+	if handler == nil {
+		return fmt.Errorf("handler is nil")
+	}
+
+	c.handler = handler
+
 	options := make([]golang.PushConsumerOption, 0)
 	if c.cfg.ConsumerAwaitDuration > 0 {
 		options = append(options, golang.WithPushAwaitDuration(c.cfg.ConsumerAwaitDuration))
 	}
-	if len(c.cfg.TopicHandlers) > 0 {
-		options = append(options, golang.WithPushMessageListener(&golang.FuncMessageListener{
-			Consume: func(mv *golang.MessageView) golang.ConsumerResult {
-				topic := mv.GetTopic()
-				if handler, ok := c.cfg.TopicHandlers[topic]; ok {
-					header := make(http.Header)
-					keys := mv.GetKeys()
-					var timestamp int64 = 0
-					if len(keys) == 1 {
-						_ = conv.Unmarshal(keys[0], &header)
-						t := header.Get("Timestamp")
-						if t != "" {
-							timestamp, _ = conv.Convert[int64](t)
-						}
-					}
-					err := handler(context.Background(), &Event{
-						Id:        *mv.GetTag(),
-						Timestamp: timestamp,
-						Headers:   header,
-						Payload:   mv.GetBody(),
-					})
-					if err != nil {
-						return golang.FAILURE
-					}
-					return golang.SUCCESS
+
+	options = append(options, golang.WithPushMessageListener(&golang.FuncMessageListener{
+		Consume: func(mv *golang.MessageView) golang.ConsumerResult {
+			topic := mv.GetTopic()
+
+			header := make(http.Header)
+			keys := mv.GetKeys()
+			var timestamp int64 = 0
+			if len(keys) == 1 {
+				_ = conv.Unmarshal(keys[0], &header)
+				t := header.Get("Timestamp")
+				if t != "" {
+					timestamp, _ = conv.Convert[int64](t)
 				}
+			}
+
+			event := &Event{
+				Id:        *mv.GetTag(),
+				Topic:     topic,
+				Timestamp: timestamp,
+				Headers:   header,
+				Payload:   mv.GetBody(),
+			}
+
+			err := c.handler(context.Background(), event)
+			if err != nil {
+				fmt.Printf("Failed to handle message from topic %s: %v\n", topic, err)
 				return golang.FAILURE
-			},
-		}))
-		filerAll := make(map[string]*golang.FilterExpression)
-		for k, _ := range c.cfg.TopicHandlers {
-			filerAll[k] = golang.NewFilterExpression("*")
-		}
+			}
+			return golang.SUCCESS
+		},
+	}))
 
-		options = append(options, golang.WithPushSubscriptionExpressions(filerAll))
-
-		//topics := lo.Keys(c.cfg.TopicHandlers)
-		//options = append(options, golang.WithContext(topics...))
-		//
-	}
+	// 订阅所有主题
+	filterAll := make(map[string]*golang.FilterExpression)
+	filterAll["*"] = golang.NewFilterExpression("*")
+	options = append(options, golang.WithPushSubscriptionExpressions(filterAll))
 
 	rocketConsumer, err := golang.NewPushConsumer(&golang.Config{
 		Endpoint:      c.cfg.Endpoint,
@@ -200,25 +254,19 @@ func (c *rocketMQConsumer) Start(_ ConsumerHandler) error {
 		options...,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create push consumer: %w", err)
 	}
-
-	//for k, _ := range c.cfg.TopicHandlers {
-	//	filterExpression := golang.NewFilterExpression("*")
-	//	err := rocketConsumer.Subscribe(k, filterExpression)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
 
 	err = rocketConsumer.Start()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start consumer: %w", err)
 	}
 	c.consumer = rocketConsumer
 	return nil
 }
 
 func (c *rocketMQConsumer) Close() {
-	_ = c.consumer.GracefulStop()
+	if c.consumer != nil {
+		_ = c.consumer.GracefulStop()
+	}
 }

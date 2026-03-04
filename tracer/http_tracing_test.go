@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/magic-lib/go-plat-trace/tracer"
 	"github.com/magic-lib/go-plat-utils/cond"
 	"github.com/magic-lib/go-plat-utils/crypto"
 	"github.com/magic-lib/go-plat-utils/utils/httputil"
-	"github.com/magic-lib/go-servicekit/tracer"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/rest"
 	"go.opentelemetry.io/otel"
@@ -74,7 +74,7 @@ func TestGinTrace(t *testing.T) {
 	initTraceProvider()
 
 	g := gin.Default()
-	g.Use(tc.GinMiddleware())
+	//g.Use(tc.GinMiddleware())
 	g.Handle(http.MethodGet, "/gin/:name", func(c *gin.Context) {
 		kkk := c.FullPath()
 		fmt.Println(kkk)
@@ -185,7 +185,7 @@ func TestCreateJwt(t *testing.T) {
 	//  "user_id": 100007,
 	//  "user_name": "tianlin"
 	//}
-	encodeStr, err := httputil.CreateJwtToken(jwtSecret, map[string]any{
+	encodeStr, err := httputil.GenerateBearerJwtToken(jwtSecret, map[string]any{
 		"role_names": []string{"admin"},
 		"user_id":    100007,
 		"user_name":  "tianlin",
@@ -217,7 +217,7 @@ func TestGoZeroJwt(t *testing.T) {
 				Method: http.MethodGet,
 				Path:   "/member/:member_id",
 				Handler: func(writer http.ResponseWriter, r *http.Request) {
-					user, err := httputil.ExtractorJwtToken[map[string]any](jwtSecret, r.Header, &crypto.JwtCfg{
+					user, err := httputil.ExtractAndDecryptJwtData[map[string]any](jwtSecret, r.Header, &crypto.JwtCfg{
 						EncryptJsonKeyList: []string{"user_name"},
 					})
 
