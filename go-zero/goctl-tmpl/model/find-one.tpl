@@ -74,8 +74,10 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}B
             if maxLimit == 0 {
                 maxLimit = 100
             }
-            pageModel = pageModel.GetPage(maxLimit)
         }
+    }
+    if maxLimit > 0 {
+        pageModel = pageModel.GetPage(maxLimit)
     }
 
     var query  string
