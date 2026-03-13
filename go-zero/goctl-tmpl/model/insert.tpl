@@ -46,3 +46,31 @@ func (m *default{{.upperStartCamelObject}}Model) InsertList(ctx context.Context,
     }
     return oneSession.ExecCtx(ctx, insertSql, insertData...)
 }
+
+func (m *default{{.upperStartCamelObject}}Model) InsertOrUpdate(ctx context.Context, data *{{.upperStartCamelObject}}, uniqFunc func(data *{{.upperStartCamelObject}}) sqlstatement.LogicCondition, updateFunc func(data *{{.upperStartCamelObject}}) error,session ...sqlx.Session) error {
+	if uniqFunc == nil {
+        return fmt.Errorf("param uniqFunc empty")
+    }
+
+    whereCond := uniqFunc(data)
+    newData, err := m.Find{{.upperStartCamelObject}}(ctx, whereCond, session...)
+    if err != nil {
+        return err
+    }
+    if newData == nil {
+        ret, err := m.Insert(ctx, data, session...)
+        if err != nil {
+            return err
+        }
+        if ret == nil {
+            return fmt.Errorf("insert fail")
+        }
+        data.{{.upperStartCamelPrimaryKey}}, _ = ret.LastInsertId()
+        return nil
+    }
+    data.{{.upperStartCamelPrimaryKey}} = newData.{{.upperStartCamelPrimaryKey}}
+    if updateFunc == nil {
+        return m.Update(ctx, data, session...)
+    }
+    return m.UpdatePartialByFunc(ctx, newData.{{.upperStartCamelPrimaryKey}}, updateFunc, session...)
+}

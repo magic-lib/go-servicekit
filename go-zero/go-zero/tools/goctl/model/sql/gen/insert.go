@@ -59,14 +59,15 @@ func genInsert(table Table, withCache, postgreSql bool) (string, string, error) 
 	output, err := util.With("insert").
 		Parse(text).
 		Execute(map[string]any{
-			"withCache":             withCache,
-			"upperStartCamelObject": camel,
-			"lowerStartCamelObject": stringx.From(camel).Untitle(),
-			"expression":            strings.Join(expressions, ", "),
-			"expressionValues":      strings.Join(expressionValues, ", "),
-			"keys":                  strings.Join(keys, "\n"),
-			"keyValues":             strings.Join(keyVars, ", "),
-			"data":                  table,
+			"withCache":                 withCache,
+			"upperStartCamelObject":     camel,
+			"lowerStartCamelObject":     stringx.From(camel).Untitle(),
+			"upperStartCamelPrimaryKey": util.EscapeGolangKeyword(stringx.From(table.PrimaryKey.Name.ToCamel()).Title()),
+			"expression":                strings.Join(expressions, ", "),
+			"expressionValues":          strings.Join(expressionValues, ", "),
+			"keys":                      strings.Join(keys, "\n"),
+			"keyValues":                 strings.Join(keyVars, ", "),
+			"data":                      table,
 		})
 	if err != nil {
 		return "", "", err
