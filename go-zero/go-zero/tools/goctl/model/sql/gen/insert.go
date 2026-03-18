@@ -63,6 +63,7 @@ func genInsert(table Table, withCache, postgreSql bool) (string, string, error) 
 			"upperStartCamelObject":     camel,
 			"lowerStartCamelObject":     stringx.From(camel).Untitle(),
 			"upperStartCamelPrimaryKey": util.EscapeGolangKeyword(stringx.From(table.PrimaryKey.Name.ToCamel()).Title()),
+			"dataType":                  table.PrimaryKey.DataType,
 			"expression":                strings.Join(expressions, ", "),
 			"expressionValues":          strings.Join(expressionValues, ", "),
 			"keys":                      strings.Join(keys, "\n"),

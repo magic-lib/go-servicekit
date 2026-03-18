@@ -65,7 +65,11 @@ func (m *default{{.upperStartCamelObject}}Model) InsertOrUpdate(ctx context.Cont
         if ret == nil {
             return fmt.Errorf("insert fail")
         }
-        data.{{.upperStartCamelPrimaryKey}}, _ = ret.LastInsertId()
+        lastId, err := ret.LastInsertId()
+        if err != nil {
+            return err
+        }
+        data.{{.upperStartCamelPrimaryKey}}, _ = conv.Convert[{{.dataType}}](lastId)
         return nil
     }
     data.{{.upperStartCamelPrimaryKey}} = newData.{{.upperStartCamelPrimaryKey}}

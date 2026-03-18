@@ -19,7 +19,7 @@ func (m *default{{.upperStartCamelObject}}Model) delete(ctx context.Context, {{.
 
 func (m *default{{.upperStartCamelObject}}Model) Delete(ctx context.Context, {{.lowerStartCamelPrimaryKey}} {{.dataType}}, session ...sqlx.Session) error {
     whereCondition := sqlstatement.LogicCondition{
-        Conditions: []any{
+        Conditions: []sqlstatement.ICondition{
             sqlstatement.Condition{
                 Field:    "{{.originalPrimaryKey}}",
                 Operator: sqlstatement.OperatorEqual,
@@ -35,7 +35,7 @@ func (m *default{{.upperStartCamelObject}}Model) DeleteList(ctx context.Context,
     	return fmt.Errorf("param {{.lowerStartCamelPrimaryKey}}List empty")
     }
     whereCondition := sqlstatement.LogicCondition{
-        Conditions: []any{
+        Conditions: []sqlstatement.ICondition{
             sqlstatement.Condition{
                 Field:    "{{.originalPrimaryKey}}",
                 Operator: sqlstatement.OperatorIn,

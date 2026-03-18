@@ -25,7 +25,7 @@ func (m *default{{.upperStartCamelObject}}Model) Update(ctx context.Context, dat
         oneSession = m.conn
     }
     return m.updatePartialBySession(ctx, oneSession, data, []string{}, sqlstatement.LogicCondition{
-        Conditions: []any{
+        Conditions: []sqlstatement.ICondition{
             sqlstatement.Condition{
                 Field:    "{{.originalPrimaryKey}}",
                 Operator: sqlstatement.OperatorEqual,
