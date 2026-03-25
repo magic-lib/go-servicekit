@@ -1,3 +1,3 @@
 Insert(ctx context.Context, data *{{.upperStartCamelObject}}, session ...sqlx.Session) (sql.Result,error)
 InsertList(ctx context.Context, dataList []*{{.upperStartCamelObject}}, session ...sqlx.Session) (sql.Result,error)
-InsertOrUpdate(ctx context.Context, data *{{.upperStartCamelObject}}, uniqFunc func(data *{{.upperStartCamelObject}}) sqlstatement.LogicCondition, updateFunc func(data *{{.upperStartCamelObject}}) error,session ...sqlx.Session) error
+InsertOrUpdate(ctx context.Context, data *{{.upperStartCamelObject}}, uniqFunc func(data *{{.upperStartCamelObject}}) sqlstatement.LogicCondition, updateFunc func(data *{{.upperStartCamelObject}}) error,session ...sqlx.Session) (*{{.upperStartCamelObject}}, error)

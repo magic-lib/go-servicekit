@@ -47,34 +47,44 @@ func (m *default{{.upperStartCamelObject}}Model) InsertList(ctx context.Context,
     return oneSession.ExecCtx(ctx, insertSql, insertData...)
 }
 
-func (m *default{{.upperStartCamelObject}}Model) InsertOrUpdate(ctx context.Context, data *{{.upperStartCamelObject}}, uniqFunc func(data *{{.upperStartCamelObject}}) sqlstatement.LogicCondition, updateFunc func(data *{{.upperStartCamelObject}}) error,session ...sqlx.Session) error {
+func (m *default{{.upperStartCamelObject}}Model) InsertOrUpdate(ctx context.Context, data *{{.upperStartCamelObject}}, uniqFunc func(data *{{.upperStartCamelObject}}) sqlstatement.LogicCondition, updateFunc func(data *{{.upperStartCamelObject}}) error,session ...sqlx.Session) (*{{.upperStartCamelObject}}, error) {
 	if uniqFunc == nil {
-        return fmt.Errorf("param uniqFunc empty")
+        return nil, fmt.Errorf("param uniqFunc empty")
     }
 
     whereCond := uniqFunc(data)
     newData, err := m.Find{{.upperStartCamelObject}}(ctx, whereCond, session...)
     if err != nil {
-        return err
+        return nil, err
     }
     if newData == nil {
         ret, err := m.Insert(ctx, data, session...)
         if err != nil {
-            return err
+            return nil, err
         }
         if ret == nil {
-            return fmt.Errorf("insert fail")
+            return nil, fmt.Errorf("insert fail")
         }
         lastId, err := ret.LastInsertId()
         if err != nil {
-            return err
+            return nil, err
         }
         data.{{.upperStartCamelPrimaryKey}}, _ = conv.Convert[{{.dataType}}](lastId)
-        return nil
+        return data, nil
     }
     data.{{.upperStartCamelPrimaryKey}} = newData.{{.upperStartCamelPrimaryKey}}
     if updateFunc == nil {
-        return m.Update(ctx, data, session...)
+        return data, m.Update(ctx, data, session...)
     }
-    return m.UpdatePartialByFunc(ctx, newData.{{.upperStartCamelPrimaryKey}}, updateFunc, session...)
+
+    err = m.UpdatePartialByFunc(ctx, newData.{{.upperStartCamelPrimaryKey}}, updateFunc, session...)
+    if err == nil {
+        // 如果已经更新成功了，则需要重新获取最终更新的数据返回
+        newUpdateData, getErr := m.FindOne(ctx, newData.{{.upperStartCamelPrimaryKey}}, session...)
+        if getErr != nil {
+            return data, nil
+        }
+        return newUpdateData, nil
+    }
+    return data, err
 }
