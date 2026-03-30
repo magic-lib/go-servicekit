@@ -80,7 +80,7 @@ func (m *default{{.upperStartCamelObject}}Model) InsertOrUpdate(ctx context.Cont
     err = m.UpdatePartialByFunc(ctx, newData.{{.upperStartCamelPrimaryKey}}, updateFunc, session...)
     if err == nil {
         newId := newData.{{.upperStartCamelPrimaryKey}}
-        updateFunc(newData)
+        _ = updateFunc(newData)
         newData.{{.upperStartCamelPrimaryKey}} = newId //防止被方法里覆盖了
         return newData, nil
         // 提高效率，避免重新查询
