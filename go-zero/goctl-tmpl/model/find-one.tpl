@@ -67,7 +67,9 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}(
 
 
 func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}ByPage(ctx context.Context, whereCond sqlstatement.LogicCondition, pageModel *httputil.PageModel, maxLimit int, orderBy string, session ...sqlx.Session) ([]*{{.upperStartCamelObject}}, int64, error) {
+	var dontSearchCount bool
 	if pageModel == nil {
+	    dontSearchCount = true
         pageModel = new(httputil.PageModel)
     }else{
         if pageModel.PageSize > 0 { // 每页数量
@@ -119,7 +121,7 @@ func (m *default{{.upperStartCamelObject}}Model) List{{.upperStartCamelObject}}B
 	if err != nil {
 		return list, listLen, err
 	}
-	if !useCount {
+	if dontSearchCount || !useCount {
 		return list, listLen, nil
 	}
 
