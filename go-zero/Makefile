@@ -77,6 +77,7 @@ gen-zero-grpc:
 	  goctl rpc protoc $${filename} --go_out=$(GrpcRpcGoCreateFolder) \
 			--go-grpc_out=$(GrpcRpcGoCreateFolder) \
 			--proto_path=$(GrpcProtoHub) \
+			--proto_path=$(ZeroTemplateDir)/goctl-zrpc/googleapis \
 			--proto_path=$(ZeroTemplateDir)/goctl-zrpc/protoc-33.4/include \
 			--zrpc_out=$(ZGrpcZRpcCreateFolder) \
 			--style go_zero; \

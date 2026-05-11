@@ -62,9 +62,9 @@ model:
       type: int64
       unsigned_type: uint64
     smallint:
-      null_type: sql.NullInt64
-      type: int64
-      unsigned_type: uint64
+      null_type: sql.NullInt32
+      type: int
+      unsigned_type: uint
     tinyint(1):
       null_type: sql.NullBool
       type: bool

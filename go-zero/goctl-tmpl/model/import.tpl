@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/magic-lib/go-plat-utils/conv"
 	"github.com/magic-lib/go-plat-utils/utils/httputil"
+	"sync"
+
 	//"github.com/magic-lib/go-plat-trace/tracer"
 	"strings"
 	{{if .time}}"time"{{end}}

@@ -140,7 +140,7 @@ var commonMysqlDataTypeMapString = map[string]string{
 	"boolean": "bool",
 	// number
 	"tinyint":   "int64",
-	"smallint":  "int64",
+	"smallint":  "int32",
 	"mediumint": "int64",
 	"int":       "int64",
 	"int1":      "int64",

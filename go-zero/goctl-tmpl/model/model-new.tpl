@@ -1,9 +1,8 @@
 func new{{.upperStartCamelObject}}Model(conn sqlx.SqlConn{{if .withCache}}, c cache.CacheConf, opts ...cache.Option{{end}}) *default{{.upperStartCamelObject}}Model {
-	sqlDb, _ := conn.RawDB()
 	sqlBuilder := sqlstatement.NewSqlStruct(
         sqlstatement.SetColumnTagName("db"),
         sqlstatement.SetStructData({{.upperStartCamelObject}}{}),
-        sqlstatement.SetColumnList(sqlDb, {{.table}}),
+        sqlstatement.SetColumnListBySqlConn(conn, {{.table}}),
         sqlstatement.SetTableName({{.table}}),
     )
 	return &default{{.upperStartCamelObject}}Model{

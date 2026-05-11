@@ -7,6 +7,7 @@ type (
 		{{if .withCache}}sqlc.CachedConn{{else}}conn sqlx.SqlConn{{end}}
 		gormDB *gorm.DB
 		sqlBuilder *sqlstatement.SqlStruct
+		insertLocker sync.Mutex
 		table string
 	}
 
