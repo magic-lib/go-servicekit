@@ -2,8 +2,10 @@ package command
 
 import (
 	_ "embed"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -137,4 +139,20 @@ func Test_parseTableList(t *testing.T) {
 		actual := patterns.Match(v)
 		assert.Equal(t, expected, actual)
 	}
+}
+func Test_parseTableList2(t *testing.T) {
+	tableIgnorePat := map[string]any{
+		"^collection_log_": struct{}{},
+	}
+	for tableStr, _ := range tableIgnorePat {
+		reg, err := regexp.Compile(tableStr)
+		if err == nil && reg != nil {
+			if reg.MatchString("collection_log_202306") {
+				fmt.Println("matched")
+				return
+			}
+		}
+	}
+	fmt.Println("no matched")
+
 }

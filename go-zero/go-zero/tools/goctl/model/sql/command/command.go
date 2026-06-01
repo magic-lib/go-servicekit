@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -126,7 +127,7 @@ func MySqlDataSource(_ *cobra.Command, _ []string) error {
 	}
 
 	patterns := parseTableList(VarStringSliceTable)
-	ignoePatterns := parseTableList(VarStringSliceIgnoreTable)
+	ignorePatterns := parseTableList(VarStringSliceIgnoreTable)
 	cfg, err := config.NewConfig(style)
 	if err != nil {
 		return err
@@ -136,7 +137,7 @@ func MySqlDataSource(_ *cobra.Command, _ []string) error {
 		url:            url,
 		dir:            dir,
 		tablePat:       patterns,
-		tableIgnorePat: ignoePatterns,
+		tableIgnorePat: ignorePatterns,
 		cfg:            cfg,
 		cache:          cache,
 		idea:           idea,
@@ -333,6 +334,20 @@ func fromMysqlDataSource(arg dataSourceArg) error {
 			if arg.tableIgnorePat.Match(item) {
 				continue
 			}
+			//如果是正则表达式，则继续进行匹配
+			found := false
+			for tableStr, _ := range arg.tableIgnorePat {
+				reg, err := regexp.Compile(tableStr)
+				if err == nil && reg != nil {
+					if reg.MatchString(item) {
+						found = true
+						break
+					}
+				}
+			}
+			if found {
+				continue
+			}
 		}
 
 		columnData, err := im.FindColumns(dsn.DBName, item)
@@ -342,7 +357,7 @@ func fromMysqlDataSource(arg dataSourceArg) error {
 
 		table, err := columnData.Convert()
 		if err != nil {
-			logx.Error("%+v", err)
+			logx.Errorf("%+v", err)
 			continue
 		}
 
@@ -405,7 +420,7 @@ func fromPostgreSqlDataSource(arg pgDataSourceArg) error {
 
 		table, err := columnData.Convert()
 		if err != nil {
-			logx.Error("%+v", err)
+			logx.Errorf("%+v", err)
 			continue
 		}
 
