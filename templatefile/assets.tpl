@@ -4,6 +4,7 @@ import (
 	"bytes"
     "embed"
     "fmt"
+    "io/fs"
     "github.com/xuri/excelize/v2"
 )
 
@@ -28,11 +29,21 @@ type AssetFile struct {
 	ModTime  string // 修改时间
 }
 
+// AssetDir represents an embedded directory, allowing fs.Sub to read files within it.
+type AssetDir struct {
+	Key     string   // 目录唯一标识
+	DirName string   // 目录名
+	EmbedFS embed.FS // 整个目录的 embed.FS
+}
+
 // fileCacheData 全局使用的静态文件缓存
 var fileCacheData = map[string]*AssetFile{}
 
-var templates = map[string]*AssetFile{
-{{range .Files}}	{{.ConstName}}: {
+// dirCacheData 目录文件系统缓存
+var dirCacheData = map[string]fs.FS{}
+
+var allFiles = map[string]*AssetFile{
+{{range .Files}}{{if not .IsDirWild}}	{{.ConstName}}: {
         Key:      "{{.ConstName}}",
         FileName: "{{.Name}}",
         FullName: {{.ConstName}},
@@ -44,13 +55,21 @@ var templates = map[string]*AssetFile{
         EmbedFS:  {{.EmbedFS}},
         ModTime:  "{{.ModTime}}",
     },
-{{end}}}
+{{end}}{{end}}}
+
+var allDirs = map[string]*AssetDir{
+{{range .Files}}{{if .IsDirWild}}	{{.ConstName}}: {
+		Key:     "{{.ConstName}}",
+		DirName: "{{.Dir}}",
+		EmbedFS: {{.EmbedFS}},
+	},
+{{end}}{{end}}}
 
 func LoadAssetFile(fileName string) (*AssetFile, error) {
     if data, ok := fileCacheData[fileName]; ok {
 		return data, nil
 	}
-	if f, ok := templates[fileName]; ok {
+	if f, ok := allFiles[fileName]; ok {
 		data, err := f.EmbedFS.ReadFile(fileName)
 		if err != nil {
 			return nil, err
@@ -60,6 +79,23 @@ func LoadAssetFile(fileName string) (*AssetFile, error) {
 		return f, nil
 	}
 	return nil, fmt.Errorf("file %s not found", fileName)
+}
+
+// LoadAssetDir returns an fs.FS for the given directory, allowing file access within it.
+// The dirName should match the Dir field of an AssetDir entry.
+func LoadAssetDir(dirName string) (fs.FS, error) {
+	if dfs, ok := dirCacheData[dirName]; ok {
+		return dfs, nil
+	}
+	if d, ok := allDirs[dirName]; ok {
+		subFS, err := fs.Sub(d.EmbedFS, d.DirName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sub filesystem for dir %s: %w", dirName, err)
+		}
+		dirCacheData[dirName] = subFS
+		return subFS, nil
+	}
+	return nil, fmt.Errorf("dir %s not found", dirName)
 }
 
 type ExcelTmplData struct {

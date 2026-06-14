@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -80,8 +81,12 @@ func main() {
 	type collectedFile struct {
 		RelPath   string // Relative path within its source directory
 		SourceDir string // Absolute path of source directory
+		IsDirWild bool   // True if this entry represents a directory wildcard (e.g. "js/*")
 	}
 	var allFiles []collectedFile
+
+	// Track directories that contain files, to add wildcard entries
+	dirsWithFiles := make(map[string]string) // key: relative dir path, value: sourceDir
 
 	for _, sourceDir := range dirs {
 		err := filepath.WalkDir(sourceDir, func(path string, d fs.DirEntry, err error) error {
@@ -106,6 +111,13 @@ func main() {
 			if err != nil {
 				return err
 			}
+
+			// Track parent directory for wildcard entries
+			relDir := filepath.Dir(rel)
+			if relDir != "." {
+				dirsWithFiles[relDir] = sourceDir
+			}
+
 			allFiles = append(allFiles, collectedFile{
 				RelPath:   rel,
 				SourceDir: sourceDir,
@@ -115,6 +127,29 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error walking directory %s: %v\n", sourceDir, err)
 			os.Exit(1)
+		}
+	}
+
+	// Prepend directory wildcard entries (e.g. "js/*") to allFiles,
+	// so they appear first in the generated Go code.
+	// This allows using fs.Sub(embedFS, "js") to get the entire subdirectory.
+	for _, sourceDir := range dirs {
+		// Collect dirs that belong to this sourceDir, sorted for stable output
+		var dirsForSource []string
+		for relDir, sd := range dirsWithFiles {
+			if sd == sourceDir {
+				dirsForSource = append(dirsForSource, relDir)
+			}
+		}
+		// Sort to ensure consistent order
+		sort.Strings(dirsForSource)
+
+		for _, relDir := range dirsForSource {
+			allFiles = append([]collectedFile{{
+				RelPath:   relDir + "/*",
+				SourceDir: sourceDir,
+				IsDirWild: true,
+			}}, allFiles...)
 		}
 	}
 
@@ -163,41 +198,75 @@ func main() {
 		Size      int64     // 文件大小
 		Content   []byte    // 文件内容
 		ModTime   time.Time // 修改时间
+		IsDirWild bool      // True if this entry represents a directory wildcard (e.g. "js/*")
 	}
 	var infos []fileInfo
 	for i, cf := range allFiles {
-		// Get file full path
-		fullPath := filepath.Join(cf.SourceDir, cf.RelPath)
+		// Get file full path (strip wildcard for directory wildcard entries)
+		relForPath := cf.RelPath
+		if cf.IsDirWild {
+			relForPath = strings.TrimSuffix(cf.RelPath, "/*")
+		}
+		fullPath := filepath.Join(cf.SourceDir, relForPath)
 
-		// EmbedPath is the relative path from outputDir (where assets.go lives) to the source file
+		// EmbedPath is the relative path from outputDir (where generated .go lives) to the source
 		embedPath, err := filepath.Rel(outputDir, fullPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error computing relative path from %s to %s: %v\n", outputDir, fullPath, err)
 			os.Exit(1)
 		}
+		// For directory wildcard entries, append "/*" to the embed path
+		if cf.IsDirWild {
+			embedPath = embedPath + "/*"
+		}
 
 		// Generate constant name from EmbedPath to ensure uniqueness across directories
 		constName := embedPathToConst(embedPath)
 
-		// Read file info and content
-		fileInfoStat, err := os.Stat(fullPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading file %s: %v\n", fullPath, err)
-			os.Exit(1)
-		}
+		// For wildcard dir entries, we don't stat an actual file
+		var (
+			baseName      string
+			ext2          string
+			nameWithoutExt string
+			dirTemp       string
+			fileSize      int64
+			modTime       time.Time
+		)
 
-		baseName := filepath.Base(fullPath)
-		ext := filepath.Ext(baseName)
-		ext2 := ext
-		if len(ext) > 0 {
-			ext2 = ext[1:]
-		}
-		nameWithoutExt := baseName[:len(baseName)-len(ext)]
+		if cf.IsDirWild {
+			// Wildcard entry: use the dir name as the "Name"
+			dirTemp = filepath.Base(filepath.Dir(embedPath))
+			if dirTemp == "." {
+				dirTemp = ""
+			}
+			baseName = dirTemp
+			nameWithoutExt = dirTemp
+			ext2 = ""
+			fileSize = 0
+			modTime = time.Time{}
+		} else {
+			// Read file info and content
+			fileInfoStat, err := os.Stat(fullPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error reading file %s: %v\n", fullPath, err)
+				os.Exit(1)
+			}
 
-		// Dir is the directory portion of EmbedPath (e.g. "js" for "js/aaa.js", "" for root-level files)
-		dirTemp := filepath.Dir(embedPath)
-		if dirTemp == "." {
-			dirTemp = ""
+			baseName = filepath.Base(fullPath)
+			ext := filepath.Ext(baseName)
+			ext2 = ext
+			if len(ext) > 0 {
+				ext2 = ext[1:]
+			}
+			nameWithoutExt = baseName[:len(baseName)-len(ext)]
+
+			// Dir is the directory portion of EmbedPath (e.g. "js" for "js/aaa.js", "" for root-level files)
+			dirTemp = filepath.Dir(embedPath)
+			if dirTemp == "." {
+				dirTemp = ""
+			}
+			fileSize = fileInfoStat.Size()
+			modTime = fileInfoStat.ModTime()
 		}
 
 		infos = append(infos, fileInfo{
@@ -207,10 +276,11 @@ func main() {
 			BaseName:  nameWithoutExt,
 			Ext:       ext2,
 			Dir:       dirTemp,
-			Size:      fileInfoStat.Size(),
+			Size:      fileSize,
 			Content:   nil,
 			EmbedFS:   fmt.Sprintf("file%03d", i+1),
-			ModTime:   fileInfoStat.ModTime(),
+			ModTime:   modTime,
+			IsDirWild: cf.IsDirWild,
 		})
 	}
 
@@ -314,8 +384,8 @@ func splitCommaSeparated(s string) []string {
 // unique Go constant name like "JsAaaJs" or "CssSubStyleCss".
 // The full path (including directories) is used to guarantee uniqueness across all files.
 func embedPathToConst(embedPath string) string {
-	// Normalize separators: replace / and \ with space, and split on common delimiters
-	normalized := strings.NewReplacer("/", " ", "\\", " ", "_", " ", "-", " ", ".", " ").Replace(embedPath)
+	// Normalize separators: replace /, \, _, -, ., * with space, and split on common delimiters
+	normalized := strings.NewReplacer("/", " ", "\\", " ", "_", " ", "-", " ", ".", " ", "*", " ").Replace(embedPath)
 	parts := strings.Fields(normalized)
 
 	var words []string
