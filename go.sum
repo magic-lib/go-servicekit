@@ -1060,6 +1060,8 @@ github.com/magic-lib/go-plat-mysql v1.20260210.1 h1:OuJ5/YKTFdPm3ZhWP0QFcDPGtZqE
 github.com/magic-lib/go-plat-mysql v1.20260210.1/go.mod h1:emKhhZnLxhHXh9+2YxGEbNTlYyr1xZxMmSSIw9AkU+g=
 github.com/magic-lib/go-plat-mysql v1.20260210.2-0.20260530110322-62271fbc9d1c h1:BIBF+3pP97uls4R9YPR+mbudiQ/USxNtu4stG9Uc9Vc=
 github.com/magic-lib/go-plat-mysql v1.20260210.2-0.20260530110322-62271fbc9d1c/go.mod h1:/qYUNFi2jSKPH3sk/l4QlPaT9tZzYec5ALGHmU1CEaA=
+github.com/magic-lib/go-plat-mysql v1.20260210.2-0.20260610083530-a42f2d7b2c75 h1:ikEf7b09rN7pTLrqwFLFiY9jBuJ5nSfDCMQzH5CZwFk=
+github.com/magic-lib/go-plat-mysql v1.20260210.2-0.20260610083530-a42f2d7b2c75/go.mod h1:RGZOpU/0glAkqAppzV8lYukKdnYhAyebWXP8+vEDwXA=
 github.com/magic-lib/go-plat-retry v1.20260210.1 h1:x8Y8R6zCPnCpK5Xu93tsPDRYe+MKx2qlSzhVWd3WMtU=
 github.com/magic-lib/go-plat-retry v1.20260210.1/go.mod h1:HEile6miIKuyGAPxwzjvQdPgiGzr5LazmujD91r25y8=
 github.com/magic-lib/go-plat-retry v1.20260210.2-0.20260426200846-423c8b78d340 h1:X/OGUh+6XI7UeuYNVAzOlM+sZWb524G3a3Fo77oG1K4=
@@ -1071,6 +1073,8 @@ github.com/magic-lib/go-plat-utils v1.20260210.1 h1:yYddcbDKTu3MzRxCSs+jQTtTEfLt
 github.com/magic-lib/go-plat-utils v1.20260210.1/go.mod h1:mmUkWoYuHaDIjmDYSRrYPOWm8iu5xsHewPIY9EKaz7E=
 github.com/magic-lib/go-plat-utils v1.20260210.2-0.20260606083728-b23d892dac6e h1:WaQt+2YREgsNqVwgn/Bzw/oPIh7kyyX9O1fr6eK8uhs=
 github.com/magic-lib/go-plat-utils v1.20260210.2-0.20260606083728-b23d892dac6e/go.mod h1:1b0Lv5r5ijaeLGC0V77kL21RzhheNUg2zmeq3QyW+6A=
+github.com/magic-lib/go-plat-utils v1.20260210.2-0.20260612140005-4cec75f0268e h1:ltVYCWH3YO+sCmf1dinMqjtqdKAlWUCkC1uR+gilhEs=
+github.com/magic-lib/go-plat-utils v1.20260210.2-0.20260612140005-4cec75f0268e/go.mod h1:1b0Lv5r5ijaeLGC0V77kL21RzhheNUg2zmeq3QyW+6A=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
 github.com/marspere/goencrypt v1.0.7 h1:Rlvsc9b7Yeaeda+gsGeCjREVZ/KL7szelRq4+haK5mw=

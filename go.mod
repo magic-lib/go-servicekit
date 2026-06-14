@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/magic-lib/go-plat-cache v1.20260210.2-0.20260528093104-d322ca9cbeb2
 	github.com/magic-lib/go-plat-retry v1.20260210.2-0.20260426200846-423c8b78d340
-	github.com/magic-lib/go-plat-utils v1.20260210.2-0.20260606083728-b23d892dac6e
+	github.com/magic-lib/go-plat-utils v1.20260210.2-0.20260612140005-4cec75f0268e
 	github.com/orcaman/concurrent-map/v2 v2.0.1
 	github.com/samber/lo v1.52.0
 	github.com/streadway/amqp v1.1.0
@@ -100,7 +100,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
 	github.com/lqiz/expr v1.1.4 // indirect
-	github.com/magic-lib/go-plat-mysql v1.20260210.2-0.20260530110322-62271fbc9d1c // indirect
+	github.com/magic-lib/go-plat-mysql v1.20260210.2-0.20260610083530-a42f2d7b2c75 // indirect
 	github.com/magic-lib/go-plat-startupcfg v1.20260210.2-0.20260310082347-edba5f046593 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/marspere/goencrypt v1.0.7 // indirect

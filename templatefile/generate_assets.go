@@ -19,12 +19,14 @@ var templateFS embed.FS
 
 func main() {
 	var (
-		dir   string
-		goOut string
-		pkg   string
+		dir    string
+		goOut  string
+		goFile string
+		pkg    string
 	)
 	flag.StringVar(&dir, "dir", "", "Input directory(s) to scan for files, comma-separated (required)")
-	flag.StringVar(&goOut, "go_out", "", "Output directory for assets.go (default: first input directory)")
+	flag.StringVar(&goOut, "go_out", "", "Output directory for generated Go file (default: first input directory)")
+	flag.StringVar(&goFile, "go_file", "", "Output Go file name (default: assets.go)")
 	flag.StringVar(&pkg, "pkg", "", "Package name for generated Go file (default: basename of go_out or first input directory)")
 	flag.Parse()
 
@@ -68,6 +70,12 @@ func main() {
 		dirs[i] = absPath
 	}
 
+	// Determine output file name early (used to skip the generated file itself during walk)
+	outputFileName := goFile
+	if outputFileName == "" {
+		outputFileName = "assets.go"
+	}
+
 	// Collect files from all directories
 	type collectedFile struct {
 		RelPath   string // Relative path within its source directory
@@ -83,8 +91,8 @@ func main() {
 			if d.IsDir() {
 				return nil
 			}
-			// Skip assets.go file itself
-			if filepath.Base(path) == "assets.go" {
+			// Skip the generated Go file itself
+			if filepath.Base(path) == outputFileName {
 				return nil
 			}
 			// Skip temporary files starting with ~
@@ -231,11 +239,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Write assets.go to output directory
-	outputPath := filepath.Join(outputDir, "assets.go")
+	// Write generated Go file to output directory
+	outputPath := filepath.Join(outputDir, outputFileName)
 	err = os.WriteFile(outputPath, buf.Bytes(), 0644)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing assets.go: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", outputFileName, err)
 		os.Exit(1)
 	}
 	fmt.Printf("Generated %s with %d embedded files (package: %s)\n", outputPath, len(allFiles), pkg)
