@@ -81,6 +81,12 @@ func LoadAssetFile(fileName string) (*AssetFile, error) {
 	return nil, fmt.Errorf("file %s not found", fileName)
 }
 
+func LoadAllAssetFiles() []*AssetFile {
+	return lo.MapToSlice(allFiles, func(fileName string, file *AssetFile) *AssetFile {
+		return file
+	})
+}
+
 // LoadAssetDir returns an fs.FS for the given directory, allowing file access within it.
 // The dirName should match the Dir field of an AssetDir entry.
 func LoadAssetDir(dirName string) (fs.FS, error) {
